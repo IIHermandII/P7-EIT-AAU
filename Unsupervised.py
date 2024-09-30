@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from maad import sound, features, rois
 from maad.util import power2dB, plot2d, format_features, overlay_rois
-import os
 import pandas as pd
 import numpy as np
 from sklearn.manifold import TSNE
