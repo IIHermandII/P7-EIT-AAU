@@ -38,6 +38,7 @@ X = X.join(df_centroid.centroid_freq) # add column and normalize values
 tsne = TSNE(n_components=2, perplexity=12, init='pca', verbose=True)
 Y = tsne.fit_transform(X)
 
+
 fig, ax = plt.subplots()
 ax.scatter(Y[:,0], Y[:,1], c='gray', alpha=0.8)
 ax.set_xlabel('tsne dim 1')
@@ -53,4 +54,9 @@ ax.set_ylabel('tsne dim 2')
 
 # Overlay bounding box on the original spectrogram
 df_rois['label'] = cluster.labels_.astype(str)
+
+# Explicitly cast to int32 before updating the DataFrame
+bbox = df_rois[['xmin', 'xmax', 'ymin', 'ymax']].astype(np.int32)
+df_rois.update(pd.DataFrame(bbox))
+
 ax0, fig0 = overlay_rois(Sxx_db, df_rois, **{'vmin':0, 'vmax':60, 'extent':ext})
