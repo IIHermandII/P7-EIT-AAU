@@ -5,38 +5,52 @@ from maad.util import power2dB, plot2d, format_features, overlay_rois
 import os
 import pandas as pd
 import numpy as np
+from sklearn.manifold import TSNE
+from sklearn.cluster import DBSCAN
+from maad.util import rand_cmap
 
-# Load the audio file
-s_talk, fs_talk = sound.load(r'P7-EIT-AAU/22_with_labels_talk.wav')
-s_in, fs_in = sound.load(r'P7-EIT-AAU/22_with_labels_Breathe_in.wav')
-s_out, fs_out = sound.load(r'P7-EIT-AAU/22_with_labels_Breathe_out.wav')
+s, fs = sound.load('P7-EIT-AAU/22_combined.wav')
 
-import matplotlib.pyplot as plt
+db_max=70  # used to define the range of the spectrogram
+Sxx, tn, fn, ext = sound.spectrogram(s, fs, nperseg=1024, noverlap=512)
+Sxx_db = power2dB(Sxx, db_range=db_max) + db_max
+plot2d(Sxx_db, **{'extent':ext})
 
-# Load the audio file
-s_talk, fs_talk = sound.load(r'P7-EIT-AAU/22_with_labels_talk.wav')
-s_in, fs_in = sound.load(r'P7-EIT-AAU/22_with_labels_Breathe_in.wav')
-s_out, fs_out = sound.load(r'P7-EIT-AAU/22_with_labels_Breathe_out.wav')
+Sxx_db_rmbg, _, _ = sound.remove_background(Sxx_db)
+Sxx_db_smooth = sound.smooth(Sxx_db_rmbg, std=1.2)
+im_mask = rois.create_mask(im=Sxx_db_smooth, mode_bin ='relative', bin_std=2, bin_per=0.25)
+im_rois, df_rois = rois.select_rois(im_mask, min_roi=50, max_roi=None)
 
-db_max = 70  # used to define the range of the spectrogram
+# Format ROIs and visualize the bounding box on the audio spectrogram.
+df_rois = format_features(df_rois, tn, fn)
+ax0, fig0 = overlay_rois(Sxx_db, df_rois, **{'vmin':0, 'vmax':60, 'extent':ext})
 
-# Process and plot the talk signal
-Sxx_talk, tn_talk, fn_talk, ext_talk = sound.spectrogram(s_talk, fs_talk, nperseg=1024, noverlap=512)
-Sxx_db_talk = power2dB(Sxx_talk, db_range=db_max) + db_max
-plot2d(Sxx_db_talk, **{'extent': ext_talk})
+df_shape, params = features.shape_features(Sxx_db, resolution='low', rois=df_rois)
+df_centroid = features.centroid_features(Sxx_db, df_rois)
 
+# Get median frequency and normalize
+median_freq = fn[np.round(df_centroid.centroid_y).astype(int)]
+df_centroid['centroid_freq'] = median_freq/fn[-1]
 
-# Process and plot the breathe in signal
-Sxx_in, tn_in, fn_in, ext_in = sound.spectrogram(s_in, fs_in, nperseg=1024, noverlap=512)
-Sxx_db_in = power2dB(Sxx_in, db_range=db_max) + db_max
-plot2d(Sxx_db_in, **{'extent': ext_in})
+X = df_shape.loc[:,df_shape.columns.str.startswith('shp')]
+X = X.join(df_centroid.centroid_freq) # add column and normalize values
 
+tsne = TSNE(n_components=2, perplexity=12, init='pca', verbose=True)
+Y = tsne.fit_transform(X)
 
-# Process and plot the breathe out signal
-Sxx_out, tn_out, fn_out, ext_out = sound.spectrogram(s_out, fs_out, nperseg=1024, noverlap=512)
-Sxx_db_out = power2dB(Sxx_out, db_range=db_max) + db_max
-plot2d(Sxx_db_out, **{'extent': ext_out})
-plt.show()
+fig, ax = plt.subplots()
+ax.scatter(Y[:,0], Y[:,1], c='gray', alpha=0.8)
+ax.set_xlabel('tsne dim 1')
+ax.set_ylabel('tsne dim 2')
 
+cluster = DBSCAN(eps=5, min_samples=4).fit(Y)
+print('Number of soundtypes found:', np.unique(cluster.labels_).size)
 
+fig, ax = plt.subplots()
+ax.scatter(Y[:,0], Y[:,1], c=cluster.labels_, cmap=rand_cmap(5 , first_color_black=False), alpha=0.8)
+ax.set_xlabel('tsne dim 1')
+ax.set_ylabel('tsne dim 2')
 
+# Overlay bounding box on the original spectrogram
+df_rois['label'] = cluster.labels_.astype(str)
+ax0, fig0 = overlay_rois(Sxx_db, df_rois, **{'vmin':0, 'vmax':60, 'extent':ext})
