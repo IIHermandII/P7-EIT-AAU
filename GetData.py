@@ -7,6 +7,9 @@ import matplotlib.pyplot as plt
 import numpy as np  
 from scipy import signal
 from scipy.io import wavfile
+import glob
+
+AudioClipLength = 100 # in ms 
 
 def AudioInfo(wav_file, file1):
     print("--------"+ file1 + " INFO-----------")
@@ -47,8 +50,7 @@ def MakeSmaleWavFile(file1):
     newAudio = newAudio[t1:t2]
     newAudio.export('NewData.wav', format="wav") #Exports to a wav file in the current path
 
-# Uses env var 
-def FindDataDir():
+def FindDataDir(): # Uses env var 
     envP7Path = os.getenv("P7Path")
     if envP7Path is None:
         print("---> If you are working in vscode\n---> you need to restart the aplication\n---> After you have made a env\n---> for vscode to see it!!")
@@ -61,28 +63,29 @@ def FindDataDir():
     BreathOutDir    = workDir + "\\Breath out"
     CrossTalkDir    = workDir + "\\Cross talk"
     VoiceDir        = workDir + "\\Voice"
-    DirList = [BreathInDir, BreathOutDir, CrossTalkDir, VoiceDir]
+    OtherDir        = workDir + "\\Other"
+    DirList = [BreathInDir, BreathOutDir, CrossTalkDir, VoiceDir, OtherDir]
     return DirList
 
-def MakeWorkingDir(DirList,soundKlipLength):
+def MakeWorkingDir(soundKlipLength):
     currentTime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     print(currentTime)
-    DataDirList = DirList
-    DataIdentyfire = str(soundKlipLength) + "ms_" + str(currentTime)
+    DataId = str(soundKlipLength) + "ms_" + str(currentTime)
     workDir = os.getcwd() 
-    biDir = workDir + '\\PROCESSED DATA\\bi\\bi_' + DataIdentyfire 
-    boDir = workDir + '\\PROCESSED DATA\\bo\\bo_' + DataIdentyfire
-    ctDir = workDir + '\\PROCESSED DATA\\ct\\ct_' + DataIdentyfire
-    voDir = workDir + '\\PROCESSED DATA\\vo\\vo_' + DataIdentyfire
+
+    biDir = workDir + f'\\PROCESSED DATA\\bi\\bi_{DataId}'
+    boDir = workDir + f'\\PROCESSED DATA\\bo\\bo_{DataId}'
+    ctDir = workDir + f'\\PROCESSED DATA\\ct\\ct_{DataId}'
+    voDir = workDir + f'\\PROCESSED DATA\\vo\\vo_{DataId}'
+
     os.makedirs(biDir)
     os.makedirs(boDir)
     os.makedirs(ctDir)
     os.makedirs(voDir)
-    ProcessedDirList = [biDir, boDir, ctDir, voDir]
-    return ProcessedDirList
 
 def SplitData(AudioClipLength, DirList, ProcessedDirList):
     from pydub import AudioSegment
+
     FileNameList = ["2_Breath_in.wav", "2_Breath_out.wav", "2_Cross_talk.wav", "2_Voice.wav"]
     for i in range(len(ProcessedDirList)):
         print(os.getcwd())
@@ -104,11 +107,54 @@ def SplitData(AudioClipLength, DirList, ProcessedDirList):
             t1 = t2
             t2 = t2 + AudioClipLength
 
+def ChooseFile():
+    paths = ["bi", "bo", "ct", "vo"]
+    directory = os.getenv("P7Path") + "\\Data\\Refined data\\Labeled data\\PROCESSED DATA\\"
+    id = input("Do you want to use the newest file or choose a file? (new/choose): ")
+    if id == "new":
+        MakeWorkingDir(AudioClipLength)
+        latest_files = []
+        for path in paths:
+            full_path = os.path.join(directory, path)
+            files = glob.glob(full_path + "\\*")
+            latest_time = datetime.datetime.min
+            for file in files:
+                file_time = os.path.getctime(file)
+                file_time = datetime.datetime.fromtimestamp(file_time)
+                if file_time > latest_time:
+                    latest_time = file_time
+                    latest_file = file
+            if latest_file:
+                latest_files.append(latest_file)
+                print(f"\nChosen file path for {path}: {latest_file}")
+        if latest_files:
+            ProcessedDirList = latest_files
+            print("\nProcessed list = " + str(ProcessedDirList))
+            return ProcessedDirList
+        else:
+            print("No files found.")
+            return []
+    
+    else:
+        for path in paths:
+            full_path = os.path.join(directory, path)
+            files = glob.glob(full_path + "\\*")
+        for file in files:
+            print(f"File: {file}")
+        input_path = input("Enter the path of the file you want to use: ")
+        for path in paths:
+            chosen_file = path+'\\'+input_path
+            print(f"Chosen file path: {chosen_file}")
+            ProcessedDirList = [chosen_file]
+        return ProcessedDirList
+    
 def main():
-    AudioClipLength = 100 # in ms 
+    
     DirList = FindDataDir()
-    ProcessedDirList = MakeWorkingDir(DirList, AudioClipLength)
+    ProcessedDirList = ChooseFile()
     SplitData(AudioClipLength, DirList, ProcessedDirList)
+
+
 
 if __name__ == "__main__":
     main()
