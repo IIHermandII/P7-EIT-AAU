@@ -8,13 +8,6 @@ import numpy as np
 from scipy import signal
 from scipy.io import wavfile
 
-def AudioInfo(wav_file, file1):
-    print("--------"+ file1 + " INFO-----------")
-    sampleFrequensy = wav_file.getframerate()
-    numberOfAudioFrames = wav_file.getnframes()
-    SterioOrMono = wav_file.getnchannels()
-    print("sampleFrequensy: " + str(sampleFrequensy) + "\nnumberOfAudioFrames: " + str(numberOfAudioFrames) + "\nSterioOrMono: " + str(SterioOrMono))
-# Uses env var 
 def FindDataDir():
     envP7Path = os.getenv("P7Path")
     if envP7Path is None:
@@ -72,27 +65,11 @@ def SplitData(AudioClipLength, DirList, ProcessedDirList):
             t2 = t2 + AudioClipLength
     return DestintFile
 
-def fft(DestintFile):
-    import matplotlib.pyplot as plt
-    from scipy.fftpack import fft
-    from scipy.io import wavfile # get the api
-    print("##############################################")
-    print(DestintFile)
-    fs, data = wavfile.read(DestintFile) # load the data
-    print(data)
-    a = data.T[0] # this is a two channel soundtrack, I get the first track
-    b=[(ele/2**16.)*2-1 for ele in a] # this is 8-bit track, b is now normalized on [-1,1)
-    c = fft(b) # calculate fourier transform (complex numbers list)
-    d = len(c)/2  # you only need half of the fft list (real signal symmetry)
-    plt.plot(abs(c[:(d-1)]),'r') 
-    plt.show()
-
 def main():
     AudioClipLength = 100 # in ms 
     DirList = FindDataDir()
     ProcessedDirList = MakeWorkingDir(DirList, AudioClipLength)
-    DestintFile = SplitData(AudioClipLength, DirList, ProcessedDirList)
-    #fft(DestintFile)    
+    DestintFile = SplitData(AudioClipLength, DirList, ProcessedDirList)  
 
 if __name__ == "__main__":
     main()
