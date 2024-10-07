@@ -9,6 +9,8 @@ import numpy as np
 from scipy import signal
 from scipy.io import wavfile
 import glob
+import zipfile
+from pydub import AudioSegment
 
 
 AudioClipLength = 100 # in ms 
@@ -86,8 +88,19 @@ def MakeWorkingDir(soundKlipLength):
     os.makedirs(ctDir)
     os.makedirs(voDir)
 
-def SplitData(AudioClipLength, DirList, ProcessedDirList):
-    from pydub import AudioSegment
+def SplitData(AudioClipLength, DirList, ProcessedDirList, zip_path=None):
+
+
+    def extract_zip(zip_path, extract_to):
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            zip_ref.extractall(extract_to)
+
+    # If zip_path is provided, extract it
+    if zip_path:
+        extract_to = 'temp_extracted_files'
+        extract_zip(zip_path, extract_to)
+        DirList = [os.path.join(extract_to, d) for d in DirList]
+        ProcessedDirList = [os.path.join(extract_to, d) for d in ProcessedDirList]
 
     FileNameList = ["2_Breath_in.wav", "2_Breath_out.wav", "2_Cross_talk.wav", "2_Voice.wav"]
     for i in range(len(ProcessedDirList)):
@@ -104,7 +117,10 @@ def SplitData(AudioClipLength, DirList, ProcessedDirList):
             if TotalLengthInMs > t2:
                 NewAudioFile = AudioFile[t1:t2]
                 DestintFile = ProcessedDirList[i] + "\\Data" + str(t1) + "-" + str(t2) + ".wav"
-                NewAudioFile.export(DestintFile, format="wav") #Exports to a wav file in the current path
+                dest_dir = os.path.dirname(DestintFile)
+                if not os.path.exists(dest_dir):
+                    os.makedirs(dest_dir)
+                NewAudioFile.export(DestintFile, format="wav") # Exports to a wav file in the current path
             else:
                 working = 0
             t1 = t2
@@ -136,19 +152,24 @@ def ChooseFile():
             return ProcessedDirList
         else:
             print("No files found.")
-            return ProcessedDirList
+            return []
     
     else:
         for path in paths:
             full_path = os.path.join(directory, path)
             files = glob.glob(full_path + "\\*")
-        for file in files:
-            print(f"File: {file}")
+            for file in files:
+                print(f"File: {file}")
         input_path = input("Enter the path of the file you want to use: ")
+        ProcessedDirList = []
         for path in paths:
-            chosen_file = path+'\\'+input_path
-            print(f"Chosen file path: {chosen_file}")
-            ProcessedDirList = [chosen_file]
+            full_path = os.path.join(directory, path)
+            files = glob.glob(full_path + "\\*")
+            for file in files:
+                if input_path in file:
+                    print(f"Chosen file path: {file}")
+                    ProcessedDirList.append(file)
+                    break
         return ProcessedDirList
     
 def main():
@@ -156,10 +177,11 @@ def main():
     DirList = FindDataDir()
     ProcessedDirList = ChooseFile()
     SplitData(AudioClipLength, DirList, ProcessedDirList)
-    for files in ProcessedDirList:
-        convertToZip(files)
-
-
+    for processed_dir in ProcessedDirList:
+        print(processed_dir)
+        convertToZip(processed_dir)
+    print(ProcessedDirList)
+    
 
 if __name__ == "__main__":
     main()
