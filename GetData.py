@@ -1,5 +1,6 @@
 import os
 import sys
+from ConvertToZip import convertToZip
 import wave 
 import pylab
 import datetime
@@ -8,7 +9,7 @@ import numpy as np
 from scipy import signal
 from scipy.io import wavfile
 import glob
-import ConvertToZip
+
 
 AudioClipLength = 100 # in ms 
 
@@ -20,6 +21,7 @@ def AudioInfo(wav_file, file1):
     print("sampleFrequensy: " + str(sampleFrequensy) + "\nnumberOfAudioFrames: " + str(numberOfAudioFrames) + "\nSterioOrMono: " + str(SterioOrMono))
 
 def AudioPlot(wav_file,file1):
+
     signal = wav_file.readframes(-1)
     signal = np.fromstring(signal, np.int16)
     # If Stereo
@@ -40,7 +42,7 @@ def AudioPlot(wav_file,file1):
     plot_b.specgram(sig, NFFT=1024, Fs=sampleFrequensy, noverlap=900)
     plot_b.set_xlabel('Time')
     plot_b.set_ylabel('Frequency')
-    sound_info, frame_rate = get_wav_info(wav_file)
+    plt.show()
 
 def MakeSmaleWavFile(file1):
     from pydub import AudioSegment
@@ -155,7 +157,7 @@ def main():
     ProcessedDirList = ChooseFile()
     SplitData(AudioClipLength, DirList, ProcessedDirList)
     for files in ProcessedDirList:
-        ConvertToZip.convertToZip(files)
+        convertToZip(files)
 
 
 
