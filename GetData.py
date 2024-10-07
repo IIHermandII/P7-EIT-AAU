@@ -8,7 +8,7 @@ import numpy as np
 from scipy import signal
 from scipy.io import wavfile
 import glob
-from ConvertToZip import convertToZip
+import ConvertToZip
 
 AudioClipLength = 100 # in ms 
 
@@ -155,8 +155,8 @@ def main():
     ProcessedDirList = ChooseFile()
     SplitData(AudioClipLength, DirList, ProcessedDirList)
     for files in ProcessedDirList:
-        convertToZip(files)
-    
+        ConvertToZip.convertToZip(files)
+
 
 
 if __name__ == "__main__":
