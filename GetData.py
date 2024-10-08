@@ -9,12 +9,12 @@ from scipy import signal
 from scipy.io import wavfile
 
 def FindDataDir():
-    envP7Path = os.getenv("P7Path")
-    if envP7Path is None:
+    envP7RootDir = os.getenv("P7RootDir")
+    if envP7RootDir is None:
         print("---> If you are working in vscode\n---> you need to restart the aplication\n---> After you have made a env\n---> for vscode to see it!!")
-        print("---> You need to make a env called 'P7Path' containing the path to P7 root dir")
+        print("---> You need to make a env called 'P7RootDir' containing the path to P7 root dir")
         raise ValueError('Envirement Variable not fount (!env)')
-    workDir = envP7Path + "\\Data\\Refined data\\Labeled data"
+    workDir = envP7RootDir + "\\Data\\Refined data\\Labeled data"
     os.chdir(workDir) # Changes Dir to working Dir ( Labeled data )
     print(os.getcwd())
     BreathInDir     = workDir + "\\Breath in"
@@ -29,11 +29,22 @@ def MakeWorkingDir(DirList,soundKlipLength):
     print(currentTime)
     DataDirList = DirList
     DataIdentyfire = str(soundKlipLength) + "ms_" + str(currentTime)
-    workDir = os.getcwd() 
-    biDir = workDir + '\\PROCESSED DATA\\bi\\bi_' + DataIdentyfire 
-    boDir = workDir + '\\PROCESSED DATA\\bo\\bo_' + DataIdentyfire
-    ctDir = workDir + '\\PROCESSED DATA\\ct\\ct_' + DataIdentyfire
-    voDir = workDir + '\\PROCESSED DATA\\vo\\vo_' + DataIdentyfire
+    envP7LocalData = os.getenv("P7LocalData")
+    if envP7LocalData is None:
+        print("---> If you are working in vscode\n---> you need to restart the aplication\n---> After you have made a env\n---> for vscode to see it!!")
+        print("---> You need to make a env called 'P7LocalData' containing the path to P7 root dir")
+        raise ValueError('Envirement Variable not fount (!env)')
+    os.chdir(envP7LocalData)
+    workDir = os.getcwd()
+    if not os.path.exists("bi"):
+        os.mkdir("bi")
+        os.mkdir("bo")
+        os.mkdir("ct")
+        os.mkdir("vo")
+    biDir = workDir + '\\bi\\bi_' + DataIdentyfire 
+    boDir = workDir + '\\bo\\bo_' + DataIdentyfire
+    ctDir = workDir + '\\ct\\ct_' + DataIdentyfire
+    voDir = workDir + '\\vo\\vo_' + DataIdentyfire
     os.makedirs(biDir)
     os.makedirs(boDir)
     os.makedirs(ctDir)

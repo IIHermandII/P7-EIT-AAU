@@ -1,18 +1,15 @@
 import os
+from os.path import isfile, join
 import re
 import librosa
 import numpy as np
 import pandas as pd
 import scipy.stats
 import re   # Import the regular expression module
+import datetime
 
-def FindPreparedDataDir():
-    envP7Path = os.getenv("P7Path")
-    if envP7Path is None:
-        print("---> If you are working in vscode\n---> you need to restart the aplication\n---> After you have made a env\n---> for vscode to see it!!")
-        print("---> You need to make a env called 'P7Path' containing the path to P7 root dir")
-        raise ValueError('Envirement Variable not fount (!env)')
-    workDir = envP7Path + "\\Data\\Refined data\\Labeled data\\PROCESSED DATA"
+# Finds newest data works, just use it
+def FindPreparedDataDir(workDir):
     os.chdir(workDir) # Changes Dir to working Dir ( Labeled data )
     print(os.getcwd())
     BreathInDir     = workDir + "\\bi"
@@ -20,6 +17,9 @@ def FindPreparedDataDir():
     CrossTalkDir    = workDir + "\\ct"
     VoiceDir        = workDir + "\\vo"
     DirList = [BreathInDir, BreathOutDir, CrossTalkDir, VoiceDir]
+    DeciredFolders = []
+    FileName = []
+    Category = []
     for dir in DirList:
         dirDats = []
         i=0
@@ -28,21 +28,27 @@ def FindPreparedDataDir():
             new_string = str(onlyDate).replace("-", "")
             new_string = new_string.replace("_","")
             new_string = new_string.strip("[]'")
-            dirDats.append([int(new_string),i])
+            dirDats.append([int(new_string),i,subDir])
             i = i + 1
-    
-    print(sorted(dirDats,key=lambda l:l[1],reverse=True)) 
-    print("---------------------------")      
-    print(dirDats)  
-    #print(dirDats)
-    return DirList
+        dirDats = sorted(dirDats,key=lambda l:l[1],reverse=True) # Take oldest data first i belive 
+        FileName.append(dirDats[0][2])
+        DeciredFolders.append("\\" + FileName[-1])
+        macth = (re.match(r'^([a-z]{2})_', (FileName[-1])))
+        Category.append(macth.group(1))
+        
+    FullPathToFileList = [[x + y for x, y in zip(DirList, DeciredFolders)],FileName,Category]
+    print("\n--------------------DATA COLLECTED FOR USE IN CSV:-----------------------")
+    print("\n--------------------DATA DIR LIST----------------:-----------------------")
+    print(FullPathToFileList[0]) 
+    print("\n--------------------DATA FILE NAME---------------:-----------------------")
+    print(FullPathToFileList[1]) 
+    print("\n--------------------DATA CATAGORY----------------:-----------------------")
+    print(FullPathToFileList[2]) 
+    print("\n-------------------------------------------------------------------------")
+    return FullPathToFileList
 
-
-def FeatureExtraction():
-    print("Main")
-    dummy = "Data1-100.wav"
-    print("WORK DIR: " + os.getcwd())
-    y, sr = librosa.load(dummy, sr=None) # sr=none preserve native sampling rate
+def FeatureExtraction(WovFile):
+    y, sr = librosa.load(WovFile, sr=None) # sr=none preserve native sampling rate
     features = {}
 
     # Extract MFCCs
@@ -91,23 +97,46 @@ def FeatureExtraction():
 
     return features
 
+
 def main():
-    FindPreparedDataDir()
-    # features = FeatureExtraction()
-    # all_features = []
-    # features = FeatureExtraction()
-    # features['Filename'] = "File Name"
-    # features['Label'] = "Lable"
-    # all_features.append(features)
-    # features_df = pd.DataFrame(all_features)
+    envP7RootDir = os.getenv("P7RootDir")
+    if envP7RootDir is None:
+        print("---> If you are working in vscode\n---> you need to restart the aplication\n---> After you have made a env\n---> for vscode to see it!!")
+        print("---> You need to make a env called 'P7RootDir' containing the path to P7 root dir")
+        raise ValueError('Envirement Variable not fount (!env)')
+    workDir = envP7RootDir + "\\Data\\Refined data\\Labeled data\\PROCESSED DATA"
 
-    # column_order = ['Filename', 'Label'] + [f'MFCC{i + 1}' for i in range(5)] + \
-    #             ['MFCC_Var', 'Spectral_Contrast_Mean', 'Spectral_Contrast_Var',  'Chroma_Mean', 'Chroma_Var', 'STE', 'Spectral_Skewness']
+    all_features = []
+    DataDirList = FindPreparedDataDir(workDir) #returns matrix containing all info 
+    print("\n\n\nWORKING ON CSV THIS MAY TAKE A FEW ME-NUTS >:D ...")
+    for i in range(len(DataDirList[0][:])):
+        for WovFile in os.listdir(DataDirList[0][i]): # the folder path
+             
+            # MAKE THE CVS FILE WITH DATA FROM ALL THE FILES
+            FullFilePath = DataDirList[0][i] + "\\" + WovFile
+            #print(FullFilePath)
+            features = FeatureExtraction(FullFilePath)
+            features['Filename'] = DataDirList[1][i]
+            features['Label'] = DataDirList[2][i]
+            all_features.append(features)
 
-    # features_df = features_df[column_order]
+    #COMBINE CSV FILE 
+    features_df = pd.DataFrame(all_features)
+    column_order = ['Filename', 'Label'] + [f'MFCC{i + 1}' for i in range(5)] + \
+                ['MFCC_Var', 'Spectral_Contrast_Mean', 'Spectral_Contrast_Var',  'Chroma_Mean', 'Chroma_Var', 'STE', 'Spectral_Skewness']
+    features_df = features_df[column_order]
+    if not os.path.exists("CSV DATA"):
+        os.mkdir("CSV DATA")
+    currentTime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    CSVFileName = 'CSV DATA\\' +currentTime+'_audio_features_with_labels.csv'
+    features_df.to_csv(CSVFileName, index=False)
+    
+    print('CSV file created and saved to:')
+    print(workDir + "\\CSV DATA")
+    print('CSV saved under the name: ' + currentTime + '_audio_features_with_labels.csv' )
 
-    # features_df.to_csv('audio_features_with_labels.csv', index=False)
-    # print('Feature extraction completed and saved to audio_features_with_labels.csv.')
+
+
 
 if __name__ == "__main__":
     main()
