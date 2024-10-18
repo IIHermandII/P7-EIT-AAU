@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import datetime
 import scipy.stats
+from tqdm import trange
 
 def OprationExplanation():
     print("\n\n\n-------------- Labeld Data To CSV file --------------")
@@ -24,16 +25,26 @@ def GetDataFiles():
     DataList = []
     ListOfLabels = []
     FileList = os.listdir(workDir)
-    for file in FileList:
-        # print(file)
-        regExExpression = re.match("([A-z])+",file)
-        #print(regExExpression[0])
-        FullFilePath = workDir + "\\" +file
-        DataList.append([FullFilePath,file,regExExpression[0]])
-        if regExExpression[0] not in ListOfLabels:
-            ListOfLabels.append(regExExpression[0])
-    # print(DataList)
-    # print(ListOfLabels)
+    # for file in FileList:
+    #     # print(file)
+    #     regExExpression = re.match("([A-z])+",file)
+    #     #print(regExExpression[0])
+    #     FullFilePath = workDir + "\\" +file
+    #     DataList.append([FullFilePath,file,regExExpression[0]])
+    #     if regExExpression[0] not in ListOfLabels:
+    #         ListOfLabels.append(regExExpression[0])
+    for root, dirs, files in os.walk(workDir, topdown=True):
+        for file in files:
+            # print(root)
+            # print(file)
+            regExExpression = re.match("([A-z])+",file)
+            #print(regExExpression[0])
+            # FullFilePath = workDir + "\\" +file
+            LastDir = os.path.basename(os.path.normpath((root))) + "\\" + file 
+            FilePath = os.path.join(root,file)
+            DataList.append([FilePath,LastDir,regExExpression[0]])
+            if regExExpression[0] not in ListOfLabels:
+                ListOfLabels.append(regExExpression[0])
     return DataList, envP7RootDir
 
 def FeatureExtraction(WovFile):
@@ -41,7 +52,7 @@ def FeatureExtraction(WovFile):
     features = {}
 
     # Extract MFCCs
-    mfccs = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=5)
+    mfccs = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13) # 5
     for i, mfcc in enumerate(mfccs):
         features[f'MFCC{i+1}'] = np.mean(mfcc)
     # MFCCs variability
@@ -89,8 +100,7 @@ def FeatureExtraction(WovFile):
 def MakeCSV(DataList, envP7RootDir):
     print("\n\n\nWORKING ON CSV THIS MAY TAKE A FEW ME-NUTS >:D ...")
     all_features = []
-    
-    for i in range(len(DataList)):
+    for i in trange(len(DataList)):
         #print(DataList[i][0])
         FullFilePath = DataList[i][0]
         FileName = DataList[i][1]
