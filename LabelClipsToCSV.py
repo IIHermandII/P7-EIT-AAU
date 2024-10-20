@@ -8,9 +8,9 @@ import scipy.stats
 from tqdm import trange
 
 def OprationExplanation():
-    print("\n\n\n-------------- Labeld Data To CSV file --------------")
-    print("This file expect the folowing to work as entented:")
-    print("1.\tenv ( Envirement varibels / System variabels):")
+    print("\n\n\n-------------- Labelled data to CSV file --------------")
+    print("This file expects the following to work:")
+    print("1.\tenv ( Environment variables / System variables):")
     print("\tP7RootDir : C:\\path\\to\\P7  i.g C:\\Users\\emill\\OneDrive - Aalborg Universitet\\P7 ")
     print("2.\tAll files at: P7\\Data\\Label clips. to have same structure")
     print("\t<name>-<number>-...-<number>.wov")
@@ -20,20 +20,12 @@ def GetDataFiles():
     if envP7RootDir is None:
         print("---> If you are working in vscode\n---> you need to restart the aplication\n---> After you have made a env\n---> for vscode to see it!!")
         print("---> You need to make a env called 'P7RootDir' containing the path to P7 root dir")
-        raise ValueError('Envirement Variable not fount (!env)')
+        raise ValueError('Environment variable not found (!env)')
     workDir = envP7RootDir + "\\Data\\Label clips"
     DataList = []
     ListOfLabels = []
-    FileList = os.listdir(workDir)
-    # for file in FileList:
-    #     # print(file)
-    #     regExExpression = re.match("([A-z])+",file)
-    #     #print(regExExpression[0])
-    #     FullFilePath = workDir + "\\" +file
-    #     DataList.append([FullFilePath,file,regExExpression[0]])
-    #     if regExExpression[0] not in ListOfLabels:
-    #         ListOfLabels.append(regExExpression[0])
-    for root, dirs, files in os.walk(workDir, topdown=True):
+
+    for root, _, files in os.walk(workDir, topdown=True):
         for file in files:
             # print(root)
             # print(file)
@@ -90,6 +82,10 @@ def FeatureExtraction(WovFile):
     ste = np.array([sum(abs(y[i:i+frame_length]**2)) for i in range(0, len(y), hop_length)])
     features['STE'] = np.mean(ste)
 
+    # Zero-Crossing Rate
+    zcr = librosa.feature.zero_crossing_rate(y)
+    features['ZCR'] = np.mean(zcr)
+
     # Spectral Skewness
     stft = np.abs(librosa.stft(y))
     skewness = scipy.stats.skew(stft, axis=0)
@@ -111,8 +107,8 @@ def MakeCSV(DataList, envP7RootDir):
         all_features.append(features)
         #COMBINE CSV FILE 
     features_df = pd.DataFrame(all_features)
-    column_order = ['Filename', 'Label'] + [f'MFCC{i + 1}' for i in range(5)] + \
-                ['MFCC_Var', 'Spectral_Contrast_Mean', 'Spectral_Contrast_Var',  'Chroma_Mean', 'Chroma_Var', 'STE', 'Spectral_Skewness']
+    column_order = ['Filename', 'Label'] + [f'MFCC{i + 1}' for i in range(13)] + \
+                ['MFCC_Var', 'Spectral_Contrast_Mean', 'Spectral_Contrast_Var',  'Chroma_Mean', 'Chroma_Var', 'STE', 'ZCR','Spectral_Skewness']
     features_df = features_df[column_order]
     workDir = envP7RootDir + "\\Data\\CSV files"
     currentTime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
