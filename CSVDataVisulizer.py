@@ -10,8 +10,9 @@ import re   # Import the regular expression module
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
+import numpy as np
 
-def GetNewestDataFileNamer():
+def GetNewestDataFileName():
     #Check for env variable - error if not present
     envP7RootDir = os.getenv("P7RootDir")
     if envP7RootDir is None:
@@ -91,11 +92,11 @@ def ReadCVS(NewestDataFileName):
     #Remove numpy bullshit from list
     lineCSV = lineCSV[0]
     #Extract all voice clips
-    test = data[lineCSV,0]
+    test = dataPCA[lineCSV,1]
     #Find all datapoints matching the search criteria
     errors = []
     for i in range(len(test)):
-        if (test[i] < -380):
+        if (test[i] < -0.5):
             errors.append(lineCSV[i]+2)#Correct for removal of header line and start at 0 in code
     print("Potential misclassification (CSV line): ",errors)
 
@@ -145,7 +146,9 @@ def screePlot(file,dim):
     #Keep data and lables
     data = X.iloc[:, 1:].values
 
-    pca = PCA(n_components=dim).fit(data)
+    data_S = StandardScaler().fit_transform(data)
+
+    pca = PCA(n_components=dim).fit(data_S)
     PC_values = np.arange(pca.n_components_) + 1
     plt.figure()
     plt.plot(PC_values, pca.explained_variance_ratio_, 'o-', linewidth=2, color='blue')
@@ -154,11 +157,11 @@ def screePlot(file,dim):
     plt.ylabel('Variance Explained')
 
 def main():
-   NewestDataFileName = GetNewestDataFileNamer() 
+   NewestDataFileName = GetNewestDataFileName() 
    print(NewestDataFileName)
    ReadCVS(NewestDataFileName)
    #Nicoletta("labeled_first_training_final.csv")
-   screePlot(NewestDataFileName,20)
+   screePlot(NewestDataFileName,25)
    plt.show()
 
 if __name__ == "__main__":

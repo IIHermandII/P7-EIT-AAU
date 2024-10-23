@@ -43,6 +43,7 @@ def FeatureExtraction(WovFile):
     y, sr = librosa.load(WovFile, sr=None) # sr=none preserve native sampling rate
     features = {}
 
+    ##Frequency
     # Extract MFCCs
     mfccs = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13) # 5
     for i, mfcc in enumerate(mfccs):
@@ -54,11 +55,6 @@ def FeatureExtraction(WovFile):
     spectral_contrast = librosa.feature.spectral_contrast(y=y, sr=sr)
     features['Spectral_Contrast_Mean'] = np.mean(spectral_contrast, axis=1).mean()
     features['Spectral_Contrast_Var'] = np.var(spectral_contrast, axis=1).mean()
-
-    #  Chroma Frequencies
-    chroma = librosa.feature.chroma_stft(y=y, sr=sr)
-    features['Chroma_Mean'] = np.mean(chroma, axis=1).mean()
-    features['Chroma_Var'] = np.var(chroma, axis=1).mean()
 
     # Spectral Flatness
     sfm = librosa.feature.spectral_flatness(y=y)
@@ -72,6 +68,17 @@ def FeatureExtraction(WovFile):
     spectral_bandwidth = librosa.feature.spectral_bandwidth(y=y, sr=sr)
     features['Spectral_Spread'] = np.mean(spectral_bandwidth)
 
+    # Spectral Skewness
+    stft = np.abs(librosa.stft(y))
+    skewness = scipy.stats.skew(stft, axis=0)
+    features['Spectral_Skewness'] = np.mean(skewness)
+
+    # Chroma Frequencies
+    chroma = librosa.feature.chroma_stft(y=y, sr=sr)
+    features['Chroma_Mean'] = np.mean(chroma, axis=1).mean()
+    features['Chroma_Var'] = np.var(chroma, axis=1).mean()
+
+    ##Time
     # Zero-Crossing Rate
     zcr = librosa.feature.zero_crossing_rate(y)
     features['ZCR'] = np.mean(zcr)
@@ -82,14 +89,10 @@ def FeatureExtraction(WovFile):
     ste = np.array([sum(abs(y[i:i+frame_length]**2)) for i in range(0, len(y), hop_length)])
     features['STE'] = np.mean(ste)
 
-    # Zero-Crossing Rate
-    zcr = librosa.feature.zero_crossing_rate(y)
-    features['ZCR'] = np.mean(zcr)
-
-    # Spectral Skewness
-    stft = np.abs(librosa.stft(y))
-    skewness = scipy.stats.skew(stft, axis=0)
-    features['Spectral_Skewness'] = np.mean(skewness)
+    ##Energy
+    # Root-mean-square
+    rms = librosa.feature.rms(y=y)
+    features['RMS'] = np.mean(rms)
 
     return features
 
@@ -108,7 +111,7 @@ def MakeCSV(DataList, envP7RootDir):
         #COMBINE CSV FILE 
     features_df = pd.DataFrame(all_features)
     column_order = ['Filename', 'Label'] + [f'MFCC{i + 1}' for i in range(13)] + \
-                ['MFCC_Var', 'Spectral_Contrast_Mean', 'Spectral_Contrast_Var',  'Chroma_Mean', 'Chroma_Var', 'STE', 'ZCR','Spectral_Skewness']
+                ['MFCC_Var', 'Spectral_Contrast_Mean', 'Spectral_Contrast_Var', 'SFM', 'Spectral_Spread', 'Spectral_Skewness', 'Spectral_Centroid', 'Chroma_Mean', 'Chroma_Var', 'ZCR', 'STE', 'RMS']
     features_df = features_df[column_order]
     workDir = envP7RootDir + "\\Data\\CSV files"
     currentTime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
