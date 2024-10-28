@@ -7,7 +7,7 @@ def MakeWorkingDir():
     ProcessedDirList = []
     for file in os.listdir(workingdir):
         if '(done)' in file:
-            ProcessedDirList.append(file)
+            ProcessedDirList.append(file.split('(done)')[0].replace(' ', ''))
     print('ProcessedDirList = ')
     print(ProcessedDirList)
     workingdir = workingdir + '\\Unlabeled data'
@@ -29,32 +29,33 @@ def ChooseDir(): # Uses env var
     print(os.getcwd())
 
 
-def SplitData(AudioClipLength, DirList, ProcessedDirList):
+def SplitData(AudioClipLength, ProcessedDirList):
+    for audionumber in ProcessedDirList:
+        audio_file_path = os.path.join(os.getenv("P7Path"), 'Data', 'Refined data', f"{audionumber}.wav")
+        dir_path = os.path.join(os.getenv("P7Path"), 'Data', 'Refined data', 'Unlabeled data', audionumber)
+        
+        if not os.path.exists(audio_file_path):
+            print(f"File not found: {audio_file_path}")
+            continue
 
-
-    FileNameList = os.listdir(DirList[0])  # Assuming all files are in the first directory of DirList
-    for i in range(len(ProcessedDirList)):
-        print(os.getcwd())
-        AudioFile = DirList[i] + "\\" + FileNameList[i]
-        print(AudioFile)
-        AudioFile = AudioSegment.from_wav(AudioFile)
+        AudioFile = AudioSegment.from_wav(audio_file_path)
         TotalLengthInMs = len(AudioFile)
-        print("LENGTH : " + str(TotalLengthInMs))
-        t1 = 1
+        t1 = 0
         t2 = AudioClipLength
-        working = 1
-        while(working):
-            if TotalLengthInMs > t2:
-                NewAudioFile = AudioFile[t1:t2]
-                DestintFile = ProcessedDirList[i] + "\\Data" + str(t1) + "-" + str(t2) + ".wav"
-                NewAudioFile.export(DestintFile, format="wav") #Exports to a wav file in the current path
-            else:
-                working = 0
+
+        while t1 < TotalLengthInMs:
+            if t2 > TotalLengthInMs:
+                t2 = TotalLengthInMs
+            NewAudioFile = AudioFile[t1:t2]
+            DestintFile = os.path.join(dir_path, f"Data_{t1}-{t2}.wav")
+            NewAudioFile.export(DestintFile, format="wav")
+            print(f"Exported: {DestintFile}")
             t1 = t2
-            t2 = t2 + AudioClipLength
+            t2 += AudioClipLength
 
 def main():
     Unlabeled_list = MakeWorkingDir()
+    SplitData(AudioClipLength, Unlabeled_list)
     
 
 if __name__ == "__main__":
