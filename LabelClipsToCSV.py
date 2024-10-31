@@ -27,11 +27,7 @@ def GetDataFiles():
 
     for root, _, files in os.walk(workDir, topdown=True):
         for file in files:
-            # print(root)
-            # print(file)
             regExExpression = re.match("([A-z])+",file)
-            #print(regExExpression[0])
-            # FullFilePath = workDir + "\\" +file
             LastDir = os.path.basename(os.path.normpath((root))) + "\\" + file 
             FilePath = os.path.join(root,file)
             DataList.append([FilePath,LastDir,regExExpression[0]])
@@ -44,6 +40,10 @@ def FeatureExtraction(WovFile):
     features = {}
 
     ##Frequency
+    lpcs = librosa.lpc(y=y,order=6)
+    for i, lpc in enumerate(lpcs):
+        features[f'LPC{i+1}'] = lpc
+
     # Extract MFCCs
     mfccs = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13) # 5
     for i, mfcc in enumerate(mfccs):
@@ -110,7 +110,7 @@ def MakeCSV(DataList, envP7RootDir):
         all_features.append(features)
         #COMBINE CSV FILE 
     features_df = pd.DataFrame(all_features)
-    column_order = ['Filename', 'Label'] + [f'MFCC{i + 1}' for i in range(13)] + \
+    column_order = ['Filename', 'Label'] + [f'LPC{i + 2}' for i in range(5)] +  [f'MFCC{i + 1}' for i in range(13)] + \
                 ['MFCC_Var', 'Spectral_Contrast_Mean', 'Spectral_Contrast_Var', 'SFM', 'Spectral_Spread', 'Spectral_Skewness', 'Spectral_Centroid', 'Chroma_Mean', 'Chroma_Var', 'ZCR', 'STE', 'RMS']
     features_df = features_df[column_order]
     workDir = envP7RootDir + "\\Data\\CSV files"

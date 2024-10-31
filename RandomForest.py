@@ -1,17 +1,16 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.metrics import accuracy_score, classification_report
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, ConfusionMatrixDisplay
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
+from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import joblib
 import os
 import re
 import seaborn as sns
-from sklearn.decomposition import PCA
 import numpy as np
 
 def GetNewestDataFileName():
@@ -57,25 +56,39 @@ def main():
     # Split the dataset into training and testing sets (80/20)
     x_train, x_test, y_train, y_test = train_test_split(data_S, labels, test_size=0.2, random_state=420)
 
-    lda = LDA(n_components=4).fit(x_train,y_train)
-    x_train_LDA = lda.transform(x_train)
-    x_test_LDA = lda.transform(x_test)
+    # lda = LDA(n_components=4).fit(x_train,y_train)
+    # x_train_LDA = lda.transform(x_train)
+    # x_test_LDA = lda.transform(x_test)
+    # print("LDA explained var: ",sum(lda.explained_variance_ratio_))
 
-    print("LDA explained var: ",sum(lda.explained_variance_ratio_))
-
-    # Initialize the Random Forest classifier
+    # Initialize the models
     RF = RandomForestClassifier(n_estimators=100, random_state=42)
     GBDT = GradientBoostingClassifier(n_estimators=100, random_state=42)
+    LR = LogisticRegression()
 
     # Train the model on the training set
     RF.fit(x_train, y_train)
     GBDT.fit(x_train, y_train)
+    LR.fit(x_train,y_train)
 
     # Predict on the testing set
     y_pred = RF.predict(x_test)
-    #y_pred = GBDT.predict(x_test)
+
 
     # Evaluate the model
+    print("RF model\n")
+    print(f"Accuracy on Test Set: {accuracy_score(y_test, y_pred):.4f}")
+    print("Classification Report on Test Set:")
+    print(classification_report(y_test, y_pred))
+
+    y_pred = GBDT.predict(x_test)
+    print("GBDT model\n")
+    print(f"Accuracy on Test Set: {accuracy_score(y_test, y_pred):.4f}")
+    print("Classification Report on Test Set:")
+    print(classification_report(y_test, y_pred))
+
+    y_pred = LR.predict(x_test)
+    print("LR model\n")
     print(f"Accuracy on Test Set: {accuracy_score(y_test, y_pred):.4f}")
     print("Classification Report on Test Set:")
     print(classification_report(y_test, y_pred))
@@ -106,9 +119,8 @@ def main():
     #loaded_model = joblib.load(filename)
     
     #Confusion matrix
-    
     #Compute the confusion matrices for PCA and LDA
-    pca_cm = confusion_matrix(y_test, y_pred,normalize='true')
+    pca_cm = confusion_matrix(y_test, y_pred)
 
     #Prepare for plotting
     list = ['BI','BO','CT','M','V']

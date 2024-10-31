@@ -67,9 +67,7 @@ def KbestTest(features_S,labels,column_order):
 
 def RecursiveElimFeature(data_S,labels,column_order):
     #Recursive feature elimination - given model here:
-    #clf = RandomForestClassifier(n_estimators=100, random_state=42)
-    #clf = LogisticRegression()
-    clf = Perceptron()
+    clf = LogisticRegression()
     cv = StratifiedKFold(5)
 
     rfecv = RFECV(
@@ -156,7 +154,7 @@ def main():
     features = df.drop(['Filename','Label'], axis=1)
 
     features_S = StandardScaler().fit_transform(features)
-    column_order = [f'MFCC{i + 1}' for i in range(13)] + \
+    column_order = [f'LPC{i + 2}' for i in range(5)] + [f'MFCC{i + 1}' for i in range(13)] + \
                    ['MFCC_Var', 'Spectral_Contrast_Mean', 'Spectral_Contrast_Var', 
                     'SFM', 'Spectral_Spread', 'Spectral_Skewness', 'Spectral_Centroid', 
                     'Chroma_Mean', 'Chroma_Var', 'ZCR', 'STE', 'RMS']
