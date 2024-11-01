@@ -79,6 +79,8 @@ def RecursiveElimFeature(data_S,labels,column_order):
         n_jobs=3,
     )
 
+    rfecv.feature_names_in_
+
     rfecv.fit(data_S, labels)
 
     print(f"Optimal number of features: {rfecv.n_features_}")

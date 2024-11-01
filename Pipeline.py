@@ -41,21 +41,19 @@ def main():
     # Load the merged dataset
     df = pd.read_csv(NewestDataFileName)
 
-    #Remove filename coloum
-    X = df.drop(['Filename'], axis=1)
-
-    #Keep data and lables
-    data = X.iloc[:, 1:].values
-    labels = X.iloc[:, 0].values
+    data = df.drop(['Filename','Label'], axis=1)
+    labels = df['Label']
 
     model = LogisticRegression()
     pipe = Pipeline([('Scale data',StandardScaler()),
-                        ('Feature selection',RFECV(estimator=model,cv = StratifiedKFold(5))),
-                        ('Classification',model)])
+                    ('Feature selection',RFECV(estimator=model,cv = StratifiedKFold(5))),
+                    ('Classification',model)])
     
     pipe.fit(data,labels)
-    print("Selected features:\n",df.columns[2:][pipe[1].support_])
-    
+    pipe[1].feature_names_in_ = data.columns.values
+    selected_features = pipe[1].get_feature_names_out()
+    print("Selected features:\n",selected_features)
+
     #Plot results
     cv_results = pd.DataFrame(pipe[1].cv_results_)
     plt.figure()
@@ -66,10 +64,15 @@ def main():
                 yerr=cv_results["std_test_score"])
     plt.title("Recursive Feature Elimination \nwith correlated features")
 
-    data_reduce = data[:,pipe[1].support_]
+    data_reduced = data[selected_features]
     # Split the dataset into training and testing sets (80/20)
-    x_train, x_test, y_train, y_test = train_test_split(data_reduce, labels, test_size=0.2, random_state=420)
+    x_train, x_test, y_train, y_test = train_test_split(data_reduced, labels, test_size=0.2, random_state=420)
+    
     pipe.fit(x_train,y_train)
+    pipe[1].feature_names_in_ = data_reduced.columns.values
+
+    print("Names features (reduced):\n",pipe[1].get_feature_names_out())
+
     pred = pipe.predict(x_test)
     print("LR model")
     print(f"Accuracy on Test Set: {accuracy_score(y_test, pred):.4f}")

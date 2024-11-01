@@ -56,6 +56,9 @@ def main():
     # Split the dataset into training and testing sets (80/20)
     x_train, x_test, y_train, y_test = train_test_split(data_reduce, labels, test_size=0.2, random_state=420)
 
+
+    print(pipe[1].get_feature_names_out())
+    
     pred = pipe.predict(x_test)
     print("LR model")
     print(f"Accuracy on Test Set: {accuracy_score(y_test, pred):.4f}")
