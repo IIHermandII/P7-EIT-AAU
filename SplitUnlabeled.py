@@ -1,5 +1,6 @@
 import os
 from pydub import AudioSegment
+import librosa
 
 
 def MakeWorkingDir():
@@ -30,28 +31,42 @@ def ChooseDir(): # Uses env var
 
 
 def SplitData(AudioClipLength, ProcessedDirList):
-    for audionumber in ProcessedDirList:
-        audio_file_path = os.path.join(os.getenv("P7Path"), 'Data', 'Refined data', f"{audionumber}.wav")
-        dir_path = os.path.join(os.getenv("P7Path"), 'Data', 'Refined data', 'Unlabeled data', audionumber)
-        
-        if not os.path.exists(audio_file_path):
-            print(f"File not found: {audio_file_path}")
-            continue
+    # for audionumber in ProcessedDirList:
+    audio_file_path = os.path.join(os.getenv("P7Path"), 'Data', 'Refined data', "16.wav")
+    dir_path = os.path.join(os.getenv("P7Path"), 'Data', 'Refined data', 'Unlabeled data', '16')
 
-        AudioFile = AudioSegment.from_wav(audio_file_path)
-        TotalLengthInMs = len(AudioFile)
-        t1 = 0
-        t2 = AudioClipLength
+    # audio_file_path = os.path.join(os.getenv("P7Path"), 'Data', 'Refined data', f"{audionumber}.wav")
+    # dir_path = os.path.join(os.getenv("P7Path"), 'Data', 'Refined data', 'Unlabeled data', audionumber)
+    
+    if not os.path.exists(audio_file_path):
+        print(f"File not found: {audio_file_path}")
+        # continue
 
-        while t1 < TotalLengthInMs:
-            if t2 > TotalLengthInMs:
-                t2 = TotalLengthInMs
-            NewAudioFile = AudioFile[t1:t2]
-            DestintFile = os.path.join(dir_path, f"Data_{t1}-{t2}.wav")
-            NewAudioFile.export(DestintFile, format="wav")
-            print(f"Exported: {DestintFile}")
-            t1 = t2
-            t2 += AudioClipLength
+    # y, sr = librosa.load(audio_file_path, sr=None)
+    # TotalLengthInMs = int(len(y) / sr * 1000)
+    # t1 = 0
+    # t2 = AudioClipLength
+    # AudioFile = AudioSegment(
+    #     y.tobytes(), 
+    #     frame_rate=sr,
+    #     sample_width=y.dtype.itemsize,
+    #     channels=1
+    # )
+
+    AudioFile = AudioSegment.from_wav(audio_file_path)
+    TotalLengthInMs = len(AudioFile)
+    t1 = 0
+    t2 = AudioClipLength
+
+    while t1 < TotalLengthInMs:
+        if t2 > TotalLengthInMs:
+            t2 = TotalLengthInMs
+        NewAudioFile = AudioFile[t1:t2]
+        DestintFile = os.path.join(dir_path, f"Data_{t1}-{t2}.wav")
+        NewAudioFile.export(DestintFile, format="wav")
+        print(f"Exported: {DestintFile}")
+        t1 = t2
+        t2 += AudioClipLength
 
 def main():
     Unlabeled_list = MakeWorkingDir()
