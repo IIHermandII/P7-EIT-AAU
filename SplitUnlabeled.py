@@ -42,17 +42,6 @@ def SplitData(AudioClipLength, ProcessedDirList):
         print(f"File not found: {audio_file_path}")
         # continue
 
-    # y, sr = librosa.load(audio_file_path, sr=None)
-    # TotalLengthInMs = int(len(y) / sr * 1000)
-    # t1 = 0
-    # t2 = AudioClipLength
-    # AudioFile = AudioSegment(
-    #     y.tobytes(), 
-    #     frame_rate=sr,
-    #     sample_width=y.dtype.itemsize,
-    #     channels=1
-    # )
-
     AudioFile = AudioSegment.from_wav(audio_file_path)
     TotalLengthInMs = len(AudioFile)
     t1 = 0
