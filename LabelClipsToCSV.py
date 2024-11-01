@@ -110,7 +110,7 @@ def MakeCSV(DataList, envP7RootDir):
     column_order = ['Filename', 'Label'] + [f'MFCC{i + 1}' for i in range(13)] + \
                 ['MFCC_Var', 'Spectral_Contrast_Mean', 'Spectral_Contrast_Var',  'Chroma_Mean', 'Chroma_Var', 'STE', 'ZCR','Spectral_Skewness']
     features_df = features_df[column_order]
-    workDir = envP7RootDir + "\\Data\\Refined data\\Unlabeled data\\PROCESSED DATA"
+    workDir = envP7RootDir + "\\Data\\Refined data\\Unlabeled data\\Processed data"
     currentTime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     CSVFileName = workDir + '\\' +currentTime+'_audio_features_with_labels.csv'
     features_df.to_csv(CSVFileName, index=False)
