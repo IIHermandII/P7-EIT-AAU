@@ -70,7 +70,6 @@ def main():
     
     pipe.fit(x_train,y_train)
     pipe[1].feature_names_in_ = data_reduced.columns.values
-
     print("Names features (reduced):\n",pipe[1].get_feature_names_out())
 
     pred = pipe.predict(x_test)
@@ -90,7 +89,6 @@ def main():
 
     # Save the model to disk
     joblib.dump(pipe, 'LR_model_trainset.sav')
-    joblib.dump(data_reduce,'LR Data.csv')
 
 if __name__ == "__main__":
     main()

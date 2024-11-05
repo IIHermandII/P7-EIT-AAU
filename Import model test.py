@@ -40,7 +40,7 @@ def GetNewestDataFileName():
 def main():
     # Load the model from disk
     pipe = joblib.load('LR_model_trainset.sav')
-    data_reduce = joblib.load('LR Data.csv')
+    #data_reduce = joblib.load('LR Data.csv')
 
     NewestDataFileName = GetNewestDataFileName() 
     # Load the merged dataset
