@@ -114,6 +114,10 @@ def MakeCSV(DataList, envP7RootDir):
                 ['MFCC_Var', 'Spectral_Contrast_Mean', 'Spectral_Contrast_Var', 'SFM', 'Spectral_Spread', 'Spectral_Skewness', 'Spectral_Centroid', 'Chroma_Mean', 'Chroma_Var', 'ZCR', 'STE', 'RMS']
     features_df = features_df[column_order]
     workDir = envP7RootDir + "\\Data\\Refined data\\Unlabeled data\\PROCESSED DATA"
+    try:
+        os.path.exists(workDir)
+    except Exception as e:
+        print("Error: " + str(e))
     currentTime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     CSVFileName = workDir + '\\' +currentTime+'_audio_features_with_labels.csv'
     features_df.to_csv(CSVFileName, index=False)
