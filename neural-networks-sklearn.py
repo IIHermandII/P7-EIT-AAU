@@ -2,7 +2,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, ConfusionMatrixDisplay
 from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import StandardScaler
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import pandas as pd
 import os
 import re
@@ -32,7 +32,7 @@ def GetNewestDataFileName():
         dirDates.append([int(new_string),file])
     
     #Sort dates and return newest
-    dirDates = sorted(dirDates,key=lambda l:l[1],reverse=True) # Take oldest data first i belive 
+    dirDates = sorted(dirDates,key=lambda l:l[1],reverse=True) # Take oldest data first i believe 
     return(workDir + "\\" + dirDates[0][1])
 
 
