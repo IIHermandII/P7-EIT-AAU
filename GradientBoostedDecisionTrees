@@ -1,17 +1,17 @@
-import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, ConfusionMatrixDisplay
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
-from sklearn.linear_model import LogisticRegression
-from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
-import matplotlib.pyplot as plt
-import joblib
 import os
 import re
-import seaborn as sns
+import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import joblib
+
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.feature_selection import RFECV
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.model_selection import train_test_split, StratifiedKFold
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, ConfusionMatrixDisplay
 
 def GetNewestDataFileName():
     #Check for env variable - error if not present
@@ -42,92 +42,56 @@ def main():
     # Load the merged dataset
     df = pd.read_csv(NewestDataFileName)
 
-    #Remove filename coloum
-    X = df.drop(['Filename'], axis=1)
+    data = df.drop(['Filename','Label'], axis=1)
+    labels = df['Label']
 
-    #Keep data and lables
-    data = X.iloc[:, 1:].values
-    labels = X.iloc[:, 0].values
-
-    print("Data length: ", len(data))
-
-    data_S = StandardScaler().fit_transform(data)
-
-    # Split the dataset into training and testing sets (80/20)
-    x_train, x_test, y_train, y_test = train_test_split(data_S, labels, test_size=0.2, random_state=420)
-
-    # Initialize the models
-    GBDT = GradientBoostingClassifier(n_estimators=100, random_state=42)
-
-    # Train the model on the training set
-    GBDT.fit(x_train, y_train)
-
-    # Predict on the testing set
-    y_pred = GBDT.predict(x_test)
+    model = GradientBoostingClassifier(n_estimators=100, random_state=42, max_depth=10)
+    pipe = Pipeline([('Scale data',StandardScaler()),
+                    ('Feature selection',RFECV(estimator=model,cv = StratifiedKFold(5))),
+                    ('Classification',model)])
     
-    # Evaluate the model
-    print("GBDT model\n")
-    print(f"Accuracy on Test Set: {accuracy_score(y_test, y_pred):.4f}")
+    pipe.fit(data,labels)
+    pipe[1].feature_names_in_ = data.columns.values
+    selected_features = pipe[1].get_feature_names_out()
+    print("Selected features:\n",selected_features)
+
+    #Plot results
+    cv_results = pd.DataFrame(pipe[1].cv_results_)
+    plt.figure()
+    plt.xlabel("Number of features selected")
+    plt.ylabel("Mean test accuracy")
+    plt.errorbar(x=cv_results["n_features"],
+                y=cv_results["mean_test_score"],
+                yerr=cv_results["std_test_score"])
+    plt.title("Recursive Feature Elimination \nwith correlated features")
+
+    data_reduced = data[selected_features]
+    # Split the dataset into training and testing sets (80/20)
+    x_train, x_test, y_train, y_test = train_test_split(data_reduced, labels, test_size=0.2, random_state=420)
+    
+    pipe.fit(x_train,y_train)
+    pipe[1].feature_names_in_ = data_reduced.columns.values
+
+    print("Names features (reduced):\n",pipe[1].get_feature_names_out())
+
+    pred = pipe.predict(x_test)
+    print("LR model")
+    print(f"Accuracy on Test Set: {accuracy_score(y_test, pred):.4f}")
     print("Classification Report on Test Set:")
-    print(classification_report(y_test, y_pred))
+    print(classification_report(y_test, pred))
 
-    # Visualize feature importance
-    feature_importances = GBDT.feature_importances_
-    print(feature_importances)
-    # Feature names are the columns in X_train
-    feature_names = df.drop(['Filename', 'Label'], axis=1).columns
-
-    # Create a pandas Series to view the feature importances with their corresponding feature names
-    importances = pd.Series(feature_importances, index=feature_names)
-
-    # Sort the features by importance
-    sorted_importances = importances.sort_values(ascending=False)
-
-    plt.figure(figsize=(10, 8))
-    sns.barplot(x=sorted_importances, y=sorted_importances.index)
-    plt.xlabel('Importance')
-    plt.ylabel('Feature')
-    plt.title('Feature Importance')
-
-    #Confusion matrix
-    #Compute the confusion matrices for PCA and LDA
-    pca_cm = confusion_matrix(y_test, y_pred)
-
+    cm = confusion_matrix(y_test, pred)
     #Prepare for plotting
     list = ['BI','BO','CT','M','V']
-    cm = ConfusionMatrixDisplay(pca_cm, display_labels=list)
-
+    cm_disp = ConfusionMatrixDisplay(cm, display_labels=list)
     #Plot Confusion matrices
-    cm.plot(cmap = "Blues")
-
-    pca = PCA()
-    principalComponents = pca.fit_transform(data_S)
-
-    # Create a biplot
-    def biplot(score, coeff, labels=None):
-        xs = score[:,0]
-        ys = score[:,1]
-        scalex = 1.0/(xs.max() - xs.min())
-        scaley = 1.0/(ys.max() - ys.min())
-        plt.scatter(xs * scalex, ys * scaley, c='gray') # Plotting the scaled scores
-        for i in range(len(coeff)):
-            # Plot arrows and labels for each variable
-            x, y = coeff[i,0], coeff[i,1]
-            plt.arrow(0, 0, x, y, color='red', alpha=0.5)
-            if labels is None:
-                plt.text(x* 1.15, y * 1.15, f"Var{i+1}", color='green', ha='center', va='center')
-            else:
-                plt.text(x* 1.15, y * 1.15, labels[i], color='green', ha='center', va='center')
-        plt.xlabel("PC1")
-        plt.ylabel("PC2")
-        plt.grid()
-
-    # Create the figure for the biplot
-    plt.figure(figsize=(12, 8))
-    biplot(principalComponents[:, :2], np.transpose(pca.components_[0:2, :]), labels=feature_names)
-    plt.title('Biplot of first two Principal Components')
+    cm_disp.plot(cmap = "Blues")
 
     plt.show()
+
+    # Save the model to disk
+    joblib.dump(pipe, 'GBDT_model_trainset.sav')
+    joblib.dump(data_reduced,'GBDT Data.csv')
 
 if __name__ == "__main__":
     main()
