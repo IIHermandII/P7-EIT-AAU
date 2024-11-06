@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import joblib
+import warnings
 
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -37,7 +38,16 @@ def GetNewestDataFileName():
     return(workDir + "\\" + dirDates[0][1])
 
 def main():
-    NewestDataFileName = GetNewestDataFileName() 
+    warnings.filterwarnings("ignore")
+    #Use this variable to select between our (handlabelled) and total (self labelled) datasets
+    selectTotal = True
+
+    if selectTotal:
+        envP7RootDir = os.getenv("P7RootDir")
+        NewestDataFileName = envP7RootDir + "\\Data\\Total datasets\\Total data file (LR).csv"
+    else:
+        NewestDataFileName = GetNewestDataFileName()
+
     print("Selected data file: ", NewestDataFileName)
     # Load the merged dataset
     df = pd.read_csv(NewestDataFileName)
@@ -46,7 +56,7 @@ def main():
     labels = df['Label']
 
     print("Data loaded")
-
+    print("Training model may take several minutes depending on selected\nNO PROGRESS BE PATIENT :)")
     model = LogisticRegression()
     pipe = Pipeline([('Scale data',StandardScaler()),
                     ('Feature selection',RFECV(estimator=model,cv = StratifiedKFold(5))),
@@ -103,7 +113,7 @@ def main():
     # Save the model to disk
     joblib.dump(pipe, 'LR_model_trainset.sav')
 
-    print("Model saved \n SCRIPT DONE")
+    print("Model saved \nSCRIPT DONE")
 
 if __name__ == "__main__":
     main()
