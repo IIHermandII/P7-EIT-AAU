@@ -18,6 +18,8 @@ def GetDataFiles(fileNo):
     filePath = envP7RootDir + "\\Data\\Refined data\\" + fileNo + ".wav" 
     y, sr = librosa.load(filePath, sr=None)
 
+    print("Loaded file: ", filePath)
+
     return y, sr
 
 def FeatureExtraction(y, sr, track):
@@ -110,48 +112,58 @@ def mute_segments(y, sr, model, track, WL=0.3, HL=0.15):
         selectedFeatures = features_df[model[1].get_feature_names_out()]
         #Run prediction on the selected samples
         prediction = model.predict(selectedFeatures)
-        features['Label'] = prediction[0]
+        #features['Label'] = prediction[0]
 
-        all_features.append(features)
+        #all_features.append(features)
         prediction_list.append(str(prediction + "| Start:" + str(start_sample) + " Stop:" + str(end_sample)))
 
-        # #Remove audio if the audio is not voice
-        # if prediction[0] == 'BI' or prediction[0] == 'BO' or prediction[0] == 'M':
-        #     muted_audio[start_sample:end_sample] = 0.25*muted_audio[start_sample:end_sample]  # Mute this segment
+        #Remove audio if the audio is not voice
+        if prediction[0] == 'BI' or prediction[0] == 'BO' or prediction[0] == 'M':
+            muted_audio[start_sample:end_sample] = 0.25*muted_audio[start_sample:end_sample]  # Mute this segment
 
-    features_df = pd.DataFrame(all_features)
-    column_order = ['Filename', 'Label'] + [f'LPC{i + 2}' for i in range(5)] +  [f'MFCC{i + 1}' for i in range(13)] + \
-                ['MFCC_Var', 'Spectral_Contrast_Mean', 'Spectral_Contrast_Var', 'SFM', 'Spectral_Spread', 'Spectral_Skewness', 'Spectral_Centroid', 'Chroma_Mean', 'Chroma_Var', 'ZCR', 'STE', 'RMS']
-    features_df = features_df[column_order]
+    # features_df = pd.DataFrame(all_features)
+    # column_order = ['Filename', 'Label'] + [f'LPC{i + 2}' for i in range(5)] +  [f'MFCC{i + 1}' for i in range(13)] + \
+    #             ['MFCC_Var', 'Spectral_Contrast_Mean', 'Spectral_Contrast_Var', 'SFM', 'Spectral_Spread', 'Spectral_Skewness', 'Spectral_Centroid', 'Chroma_Mean', 'Chroma_Var', 'ZCR', 'STE', 'RMS']
+    # features_df = features_df[column_order]
 
     return muted_audio, prediction_list, features_df
 
 def main():
     warnings.filterwarnings("ignore")
-    #track = "20"
+    track = "20"
+
+    #for i in range(9,23):
+    #    track = str(i)
+    y, sr = GetDataFiles(track)
+
+    # Load the model from disk
+    pipe = joblib.load('LR_model_trainset.sav')
+
+    print("Model loaded")
+
+    newAudio, predictions, all_features = mute_segments(y,sr,pipe,track)
+
+    print("Audio processed")
+
+    envP7RootDir = os.getenv("P7RootDir")
     
-    for i in range(9,23):
-        track = str(i)
-        y, sr = GetDataFiles(track)
+    #CSVname = envP7RootDir + "\\Data\\CSV files self\\" + track + ".csv"
+    #all_features.to_csv(CSVname, index=False)
 
-        # Load the model from disk
-        pipe = joblib.load('LR_model_trainset.sav')
+    #print("Model self labelled data output")
 
-        newAudio, predictions, all_features = mute_segments(y,sr,pipe,track)
+    f = open("Predictions.txt", "w")
+    for pred in predictions:
+        f.write(pred + "\n")
+    f.close()
 
-        envP7RootDir = os.getenv("P7RootDir")
-        
-        CSVname = envP7RootDir + "\\Data\\CSV files\\Self label\\" + track + ".csv"
-        all_features.to_csv(CSVname, index=False)
+    print("Predictions data output")
 
-    # f = open("Predictions.txt", "w")
-    # for pred in predictions:
-    #     f.write(pred + "\n")
-    # f.close()
+    # Save the modified audio to a new file
+    output_path = track + ' (processed).wav'
+    sf.write(output_path, newAudio, sr)
 
-    # # Save the modified audio to a new file
-    # output_path = track + ' (processed).wav'
-    # sf.write(output_path, newAudio, sr)
+    print("Processed audio output \n SCRIPT DONE")
 
 if __name__ == "__main__":
     main()

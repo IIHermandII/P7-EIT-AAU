@@ -38,11 +38,14 @@ def GetNewestDataFileName():
 
 def main():
     NewestDataFileName = GetNewestDataFileName() 
+    print("Selected data file: ", NewestDataFileName)
     # Load the merged dataset
     df = pd.read_csv(NewestDataFileName)
 
     data = df.drop(['Filename','Label'], axis=1)
     labels = df['Label']
+
+    print("Data loaded")
 
     model = LogisticRegression()
     pipe = Pipeline([('Scale data',StandardScaler()),
@@ -50,6 +53,8 @@ def main():
                     ('Classification',model)])
     
     pipe.fit(data,labels)
+    print("Initial model fit (all features)")
+
     pipe[1].feature_names_in_ = data.columns.values
     selected_features = pipe[1].get_feature_names_out()
     print("Selected features:\n",selected_features)
@@ -64,11 +69,15 @@ def main():
                 yerr=cv_results["std_test_score"])
     plt.title("Recursive Feature Elimination \nwith correlated features")
 
+    print("Feature plot created")
+
     data_reduced = data[selected_features]
     # Split the dataset into training and testing sets (80/20)
     x_train, x_test, y_train, y_test = train_test_split(data_reduced, labels, test_size=0.2, random_state=420)
     
     pipe.fit(x_train,y_train)
+    print("Final model fit (selected features)")
+
     pipe[1].feature_names_in_ = data_reduced.columns.values
     print("Names features (reduced):\n",pipe[1].get_feature_names_out())
 
@@ -78,6 +87,8 @@ def main():
     print("Classification Report on Test Set:")
     print(classification_report(y_test, pred))
 
+    print("Classification report")
+
     cm = confusion_matrix(y_test, pred)
     #Prepare for plotting
     list = ['BI','BO','CT','M','V']
@@ -85,10 +96,14 @@ def main():
     #Plot Confusion matrices
     cm_disp.plot(cmap = "Blues")
 
+    print("Confusion matrix created")
+
     plt.show()
 
     # Save the model to disk
     joblib.dump(pipe, 'LR_model_trainset.sav')
+
+    print("Model saved \n SCRIPT DONE")
 
 if __name__ == "__main__":
     main()
