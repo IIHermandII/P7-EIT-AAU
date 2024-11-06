@@ -75,7 +75,7 @@ def main():
     print("Names features (reduced):\n",pipe[1].get_feature_names_out())
 
     pred = pipe.predict(x_test)
-    print("LR model")
+    print("GBDT model")
     print(f"Accuracy on Test Set: {accuracy_score(y_test, pred):.4f}")
     print("Classification Report on Test Set:")
     print(classification_report(y_test, pred))
