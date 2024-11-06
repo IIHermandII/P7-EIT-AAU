@@ -1,90 +1,89 @@
 import pandas as pd
-import numpy as np
+from sklearn.semi_supervised import SelfTrainingClassifier
 import matplotlib.pyplot as plt
-from sklearn.semi_supervised import LabelSpreading
-import os
-import re
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import accuracy_score
-from sklearn.decomposition import PCA
-import matplotlib.pyplot as plt
+import numpy as np
 
-
+# Load data
 data = pd.read_csv('P7-EIT-AAU\\Corrected.csv')
-data = data.drop(data.index[::10])
+
+# Print data
 print(data)
 
+# Save the correct labels from the labeled data
+correct_labels = data.iloc[:, 0].values
 
-# def GetNewestDataFileNamer():
-#     # Check for env variable - error if not present
-#     envP7RootDir = os.getenv("P7RootDir")
-#     if envP7RootDir is None:
-#         print("---> If you are working in vscode\n---> you need to restart the application\n---> After you have made an env\n---> for vscode to see it!!")
-#         print("---> You need to make an env called 'P7RootDir' containing the path to P7 root dir")
-#         raise ValueError('Environment variable not found (!env)')
-    
-#     # Enter CSV directory, change the directory for labeled data and unlabeled data
-#     labeledWorkDir = envP7RootDir + "\\Data\\CSV files"
-#     unlabeledWorkDir = envP7RootDir + "\\Data\\Refined data\\Unlabeled data\\PROCESSED DATA"
-    
-#     # Find all dates from the files
-#     labeleddirDates = []
-#     unlabeleddirDates = []
-#     for file in os.listdir(labeledWorkDir):
-#         onlyDate = re.findall(r'\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}', file)
-#         new_string = str(onlyDate).replace("-", "").replace("_", "").strip("[]'")
-#         labeleddirDates.append([int(new_string), file])
-    
-#     for file in os.listdir(unlabeledWorkDir):
-#         onlyDate = re.findall(r'\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}', file)
-#         new_string = str(onlyDate).replace("-", "").replace("_", "").strip("[]'")
-#         unlabeleddirDates.append([int(new_string), file])
-    
-#     # Sort dates and return newest
-#     labeleddirDates = sorted(labeleddirDates, key=lambda l: l[0], reverse=True) # Take newest data first
-#     unlabeleddirDates = sorted(unlabeleddirDates, key=lambda l: l[0], reverse=True) # Take newest data first
+# Separate labeled and unlabeled data
+labeled_data = data.iloc[::10]
+labeled_data = labeled_data.drop((['Filename']), axis=1)
 
-#     return (labeledWorkDir + "\\" + labeleddirDates[0][1]), (unlabeledWorkDir + "\\" + unlabeleddirDates[0][1])
+unlabeled = data.drop((['Filename']), axis=1)
+unlabeled = unlabeled.drop((['Label']), axis=1)
 
-# def PrepareData(labeledData, unlabeledData):
-#     LD = pd.read_csv(labeledData)
-#     ULD = pd.read_csv(unlabeledData)
+# Print unlabeled and labeled data
+print(unlabeled)
+print(labeled_data)
 
-#     # Drop the first column
-#     LD = LD.drop(['Filename'], axis=1)
-#     ULD = ULD.drop(['Filename'], axis=1)
+# Identify categorical columns
+categorical_columns = labeled_data.select_dtypes(include=['object']).columns
 
-#     # Keep the labels
-#     labeledlabels = LD.iloc[:, 0].values
+# Encode categorical columns
+label_encoders = {}
+for col in categorical_columns:
+    le = LabelEncoder()
+    labeled_data[col] = le.fit_transform(labeled_data[col])
+    unlabeled[col] = le.transform(unlabeled[col])
+    label_encoders[col] = le
 
-#     # Scale the data to have 0 mean and variance 1 - recommended step by sklearn
-#     X = StandardScaler().fit_transform(LD)
-#     Y = StandardScaler().fit_transform(ULD)
+# Keep data and labels
+labeled_features = labeled_data.iloc[:, 1:].values
+labeled_labels = labeled_data.iloc[:, 0].values
 
-#     return X, labeledlabels, Y
+unlabeled_features = unlabeled.values
 
-# # Load and prepare data
-# labeledDataFileName, unlabeledDataFileName = GetNewestDataFileNamer()
+# Standardize the data
+X = StandardScaler().fit_transform(unlabeled_features)
+Y = StandardScaler().fit_transform(labeled_features)
 
-# X, y, Y = PrepareData(labeledDataFileName, unlabeledDataFileName)
+# Create a SelfTrainingClassifier with a base estimator
+base_estimator = KNeighborsClassifier(n_neighbors=5)
+self_training_model = SelfTrainingClassifier(base_estimator=base_estimator)
 
-# # Encode labels to ensure they are numeric
-# label_encoder = LabelEncoder()
-# y = label_encoder.fit_transform(y)
+# Fit the model
+self_training_model.fit(Y, labeled_labels)
 
-# # Split the labeled data into training and testing sets
-# X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, random_state=0)
+# Predict labels for the unlabeled data
+predicted_labels = self_training_model.predict(X)
+print(predicted_labels)
 
+# Evaluate the model on the labeled data
+y_pred = self_training_model.predict(Y)
+accuracy = accuracy_score(labeled_labels, y_pred)
+print(f'Accuracy: {accuracy}')
 
+# Plot the KNN classification results using PCA for visualization
+from sklearn.decomposition import PCA
 
-# def main():
-#     labeledData, unlabeledData = GetNewestDataFileNamer()
-#     print(f"Labeled Data: {labeledData}")
-#     print(f"Unlabeled Data: {unlabeledData}")
-#     PrepareData(labeledData, unlabeledData)
+pca = PCA(n_components=2)
+X_pca = pca.fit_transform(np.vstack((Y, X)))
 
-# if __name__ == "__main__":
-#     main()
+# Plot the combined labels
+plt.figure(figsize=(12, 6))
+plt.subplot(1, 2, 1)
+plt.scatter(X_pca[:len(Y), 0], X_pca[:len(Y), 1], c=labeled_labels, cmap=plt.cm.Paired, edgecolor='k', s=20)
+plt.title('Labeled Data')
+plt.xlabel('Principal Component 1')
+plt.ylabel('Principal Component 2')
+
+# Plot the predicted labels for the unlabeled data
+plt.subplot(1, 2, 2)
+plt.scatter(X_pca[len(Y):, 0], X_pca[len(Y):, 1], c=predicted_labels, cmap=plt.cm.Paired, edgecolor='k', s=20)
+plt.title('Predicted Labels for Unlabeled Data')
+plt.xlabel('Principal Component 1')
+plt.ylabel('Principal Component 2')
+
+plt.show()
