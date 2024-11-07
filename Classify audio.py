@@ -90,10 +90,10 @@ def FeatureExtraction(y, sr, track):
     
     return features_df, features
 
-def mute_segments(y, sr, model, track, WL=0.3, HL=0.15):
+def mute_segments(y, sr, model, track, WL=0.2, OL=0.75):
     #WL and HL is in sec - then convert to samples
     WL_samples = int(WL * sr)
-    HL_samples = int(HL * sr)
+    HL_samples = int(WL_samples * (1-OL))
 
     # Classify each segment and mute if labeled as 'breathing'
     muted_audio = np.copy(y)
@@ -141,7 +141,7 @@ def main():
     y, sr = GetDataFiles(track)
 
     # Load the model from disk
-    pipe = joblib.load('LR_model_trainset.sav')
+    pipe = joblib.load('Models\\LR_model_trainset.sav')
 
     print("Model loaded")
 

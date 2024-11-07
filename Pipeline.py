@@ -40,7 +40,7 @@ def GetNewestDataFileName():
 def main():
     warnings.filterwarnings("ignore")
     #Use this variable to select between our (handlabelled) and total (self labelled) datasets
-    selectTotal = True
+    selectTotal = False
 
     if selectTotal:
         envP7RootDir = os.getenv("P7RootDir")
@@ -97,6 +97,10 @@ def main():
     print("Classification Report on Test Set:")
     print(classification_report(y_test, pred))
 
+    f = open("Models\\LR classification.txt", "w")
+    f.write(classification_report(y_test, pred))
+    f.close()
+
     print("Classification report")
 
     cm = confusion_matrix(y_test, pred)
@@ -111,7 +115,7 @@ def main():
     plt.show()
 
     # Save the model to disk
-    joblib.dump(pipe, 'LR_model_trainset.sav')
+    joblib.dump(pipe, 'Models\\LR_model_trainset.sav')
 
     print("Model saved \nSCRIPT DONE")
 
