@@ -6,23 +6,55 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score
 import numpy as np
 from sklearn.decomposition import PCA
+import os
 from sklearn.preprocessing import LabelEncoder
+import re
+
+
+
+def GetNewestDataFileNamer(x):
+    #Check for env variable - error if not present
+    envP7RootDir = os.getenv("P7RootDir")
+    if envP7RootDir is None:
+        print("---> If you are working in vscode\n---> you need to restart the aplication\n---> After you have made a env\n---> for vscode to see it!!")
+        print("---> You need to make a env called 'P7RootDir' containing the path to P7 root dir")
+        raise ValueError('Environment variable not found (!env)')
+    
+    if x == 'labeled':
+        #Enter CSV directory, change the directory for labeled data and unlabeled data
+        workDir = envP7RootDir + "\\Data\\CSV files"
+    else:
+        workDir = envP7RootDir + "\\Data\\Refined data\\Unlabeled data\\PROCESSED DATA"
+    
+    #Find all dates from the files
+    dirDates = []
+    for file in os.listdir(workDir):
+        onlyDate = re.findall(r'\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}', file)
+        new_string = str(onlyDate).replace("-", "")
+        new_string = new_string.replace("_","")
+        new_string = new_string.strip("[]'")
+        dirDates.append([int(new_string),file])
+    
+    #Sort dates and return newest
+    dirDates = sorted(dirDates,key=lambda l:l[1],reverse=True) # Take oldest data first i belive 
+    return(workDir + "\\" + dirDates[0][1])
+NewestDataFileName = GetNewestDataFileNamer('labeled')
 
 
 # Load data
-complete_data = pd.read_csv('P7-EIT-AAU\\Corrected.csv')
+labeled_data = pd.read_csv(GetNewestDataFileNamer('labeled'))
+unlabeled_data = pd.read_csv(GetNewestDataFileNamer('unlabeled'))
 
-complete_data_labels = complete_data.iloc[:, 1]
-complete_data_data = complete_data.iloc[:,2:]
 
-# Reduce sizse of data
-labeled_data = complete_data.groupby('Label').apply(lambda x: x.sample(6)).reset_index(drop=True)
+
+complete_data_labels = labeled_data.iloc[:, 1]
+complete_data_data = labeled_data.iloc[:,2:]
 
 #Keep data and lables
 data = labeled_data.iloc[:, 2:].values
 labels = labeled_data.iloc[:, 1].values
 
-unlabeled = complete_data.drop((['Filename', 'Label']), axis=1)
+unlabeled = unlabeled_data.drop((['Filename', 'Label']), axis=1)
 
 # Standardize the data
 complete_data_data = StandardScaler().fit_transform(complete_data_data)
@@ -58,31 +90,24 @@ complete_data_data_pca = pca.transform(complete_data_data)
 label_encoder = LabelEncoder()
 encoded_labels = label_encoder.fit_transform(labels)
 encoded_predicted_labels = label_encoder.transform(predicted_labels)
-encocoded_complete_data_labels = label_encoder.transform(complete_data_labels)
 
 # Plot the combined labels in the same figure
-plt.figure(figsize=(18, 6))
+plt.figure(figsize=(12, 6))
 
 # Plot the labeled data
-plt.subplot(1, 3, 1)
+plt.subplot(1, 2, 1)
 plt.scatter(X_pca[:len(Y), 0], X_pca[:len(Y), 1], c=encoded_labels, cmap=plt.cm.Paired, edgecolor='k', s=20)
 plt.title('Labeled Data')
 plt.xlabel('Principal Component 1')
 plt.ylabel('Principal Component 2')
 
 # Plot the predicted labels for the unlabeled data
-plt.subplot(1, 3, 2)
+plt.subplot(1, 2, 2)
 plt.scatter(X_pca[len(Y):, 0], X_pca[len(Y):, 1], c=encoded_predicted_labels, cmap=plt.cm.Paired, edgecolor='k', s=20)
 plt.title('Predicted Labels for Unlabeled Data')
 plt.xlabel('Principal Component 1')
 plt.ylabel('Principal Component 2')
 
-# Plot the complete data labels
-plt.subplot(1, 3, 3)
-plt.scatter(complete_data_data_pca[:, 0], complete_data_data_pca[:, 1], c=encocoded_complete_data_labels, cmap=plt.cm.Paired, edgecolor='k', s=20)
-plt.title('Complete Data Labels')
-plt.xlabel('Principal Component 1')
-plt.ylabel('Principal Component 2')
 
 plt.tight_layout()
 plt.show()
