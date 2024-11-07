@@ -62,28 +62,32 @@ def ReadCVS(NewestDataFileName):
     dataLDA = lda.transform(data_S)
 
     #Plot the data (raw(MFCC1,MFCC2)?, PCA, LDA)
-    plt.figure(figsize=(15, 5))
-    plt.subplot(1,3,1)
+    #plt.figure(figsize=(10, 10))
+    # plt.subplot(1,3,1)
+    plt.figure()
     list = ['BI','BO','CT','V','M']
     for i in list:
         index = labels == i
         plt.scatter(dataPCA[index,0],dataPCA[index,1],s=6)
-    plt.title("PCA")
+    plt.title("PCA analysis")
+    plt.xlabel("$PC_1$")
+    plt.ylabel("$PC_2$")
     plt.legend(list)
+    plt.savefig('Figures\\PCA data.pdf')
 
-    plt.subplot(1,3,2)
-    for i in list:
-        index = labels == i
-        plt.scatter(dataLDA[index,0],dataLDA[index,1],s=6)
-    plt.title("LDA")
-    plt.legend(list)
+    # plt.subplot(1,3,2)
+    # for i in list:
+    #     index = labels == i
+    #     plt.scatter(dataLDA[index,0],dataLDA[index,1],s=6)
+    # plt.title("LDA")
+    # plt.legend(list)
 
-    plt.subplot(1,3,3)
-    for i in list:
-        index = labels == i
-        plt.scatter(data[index,0],data[index,1],s=6)
-    plt.title("Raw Data")
-    plt.legend(list)
+    # plt.subplot(1,3,3)
+    # for i in list:
+    #     index = labels == i
+    #     plt.scatter(data[index,0],data[index,1],s=6)
+    # plt.title("Raw Data")
+    # plt.legend(list)
 
     #Find errors + locate index in csv file
     #Find all indencies matching label
@@ -136,7 +140,7 @@ def Nicoletta(file):
     plt.legend(list)
     print("PCA Variance " , sum(pca.explained_variance_ratio_))
 
-def screePlot(file,dim):
+def screePlot(file):
     #Read CSV file
     df = pd.read_csv(file)
 
@@ -148,20 +152,21 @@ def screePlot(file,dim):
 
     data_S = StandardScaler().fit_transform(data)
 
-    pca = PCA(n_components=dim).fit(data_S)
+    pca = PCA(n_components=data.shape[1]).fit(data_S)
     PC_values = np.arange(pca.n_components_) + 1
     plt.figure()
     plt.plot(PC_values, pca.explained_variance_ratio_, 'o-', linewidth=2, color='blue')
-    plt.title('Scree Plot')
-    plt.xlabel('Principal Component')
-    plt.ylabel('Variance Explained')
+    plt.title('Scree plot')
+    plt.xlabel('Principal component')
+    plt.ylabel('Variance explained')
+    plt.savefig('Figures\\Scree plot.pdf')
 
 def main():
    NewestDataFileName = GetNewestDataFileName() 
    print(NewestDataFileName)
    ReadCVS(NewestDataFileName)
    #Nicoletta("labeled_first_training_final.csv")
-   screePlot(NewestDataFileName,25)
+   screePlot(NewestDataFileName)
    plt.show()
 
 if __name__ == "__main__":

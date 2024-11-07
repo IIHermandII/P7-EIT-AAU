@@ -15,7 +15,7 @@ def GetDataFiles(fileNo):
         print("---> If you are working in vscode\n---> you need to restart the aplication\n---> After you have made a env\n---> for vscode to see it!!")
         print("---> You need to make a env called 'P7RootDir' containing the path to P7 root dir")
         raise ValueError('Environment variable not found (!env)')
-    filePath = envP7RootDir + "\\Data\\Refined data\\" + fileNo + ".wav" 
+    filePath = envP7RootDir + "\\Data\\Refined data\\" + fileNo 
     y, sr = librosa.load(filePath, sr=None)
 
     print("Loaded file: ", filePath)
@@ -90,10 +90,10 @@ def FeatureExtraction(y, sr, track):
     
     return features_df, features
 
-def mute_segments(y, sr, model, track, WL=0.3, HL=0.15):
+def mute_segments(y, sr, model, track, WL=0.2, OL=0.75):
     #WL and HL is in sec - then convert to samples
     WL_samples = int(WL * sr)
-    HL_samples = int(HL * sr)
+    HL_samples = int(WL_samples * (1-OL))
 
     # Classify each segment and mute if labeled as 'breathing'
     muted_audio = np.copy(y)
@@ -130,28 +130,34 @@ def mute_segments(y, sr, model, track, WL=0.3, HL=0.15):
 
 def main():
     warnings.filterwarnings("ignore")
-    track = "20"
+    envP7RootDir = os.getenv("P7RootDir")
+    #Type name of track to be processed
+    track = "4.wav"
 
+    #Uncomment for loop and indent from "Indent start" to "Indent end" for data file generation
     #for i in range(9,23):
+    #Indent start - 
     #    track = str(i)
     y, sr = GetDataFiles(track)
 
     # Load the model from disk
-    pipe = joblib.load('LR_model_trainset.sav')
+    pipe = joblib.load('Models\\LR_model_trainset.sav')
 
     print("Model loaded")
 
+    #Process audio - 12dB attenuation to BI, BO, M segments
     newAudio, predictions, all_features = mute_segments(y,sr,pipe,track)
 
     print("Audio processed")
-
-    envP7RootDir = os.getenv("P7RootDir")
-    
+   
     #CSVname = envP7RootDir + "\\Data\\CSV files self\\" + track + ".csv"
     #all_features.to_csv(CSVname, index=False)
 
+    #Indent end
+
     #print("Model self labelled data output")
 
+    #Export predictions document (Pred | start samp | end samp)
     f = open("Predictions.txt", "w")
     for pred in predictions:
         f.write(pred + "\n")
@@ -160,10 +166,10 @@ def main():
     print("Predictions data output")
 
     # Save the modified audio to a new file
-    output_path = track + ' (processed).wav'
+    output_path = envP7RootDir + "\\Data\\Processed audio\\" + track + " (processed).wav"
     sf.write(output_path, newAudio, sr)
 
-    print("Processed audio output \n SCRIPT DONE")
+    print("Processed audio output \nSCRIPT DONE")
 
 if __name__ == "__main__":
     main()
