@@ -16,7 +16,7 @@ complete_data_labels = complete_data.iloc[:, 1]
 complete_data_data = complete_data.iloc[:,2:]
 
 # Reduce sizse of data
-labeled_data = complete_data.iloc[::50]
+labeled_data = complete_data.groupby('Label').apply(lambda x: x.sample(6)).reset_index(drop=True)
 
 #Keep data and lables
 data = labeled_data.iloc[:, 2:].values
