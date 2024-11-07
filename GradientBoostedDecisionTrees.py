@@ -9,6 +9,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.feature_selection import RFECV
 from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, HistGradientBoostingClassifier
 from sklearn.model_selection import train_test_split, StratifiedKFold
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, ConfusionMatrixDisplay
 
@@ -47,9 +48,11 @@ def main():
 
     print("Data loaded")
 
-    model = LogisticRegression()
+    model = GradientBoostingClassifier()
+    print("Model generated")
+
     pipe = Pipeline([('Scale data',StandardScaler()),
-                    ('Feature selection',RFECV(estimator=model,cv = StratifiedKFold(5))),
+                    ('Feature selection',RFECV(estimator=model,cv = StratifiedKFold(5),n_jobs=-1,step=4)),
                     ('Classification',model)])
     
     pipe.fit(data,labels)
@@ -82,7 +85,7 @@ def main():
     print("Names features (reduced):\n",pipe[1].get_feature_names_out())
 
     pred = pipe.predict(x_test)
-    print("LR model")
+    print("GBDT model")
     print(f"Accuracy on Test Set: {accuracy_score(y_test, pred):.4f}")
     print("Classification Report on Test Set:")
     print(classification_report(y_test, pred))
@@ -101,7 +104,7 @@ def main():
     plt.show()
 
     # Save the model to disk
-    joblib.dump(pipe, 'LR_model_trainset.sav')
+    joblib.dump(pipe, 'GBDT_model_trainset.sav')
 
     print("Model saved \n SCRIPT DONE")
 
