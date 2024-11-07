@@ -40,7 +40,7 @@ def GetNewestDataFileName():
 def main():
     warnings.filterwarnings("ignore")
     #Use this variable to select between our (handlabelled) and total (self labelled) datasets
-    selectTotal = False
+    selectTotal = True
 
     if selectTotal:
         envP7RootDir = os.getenv("P7RootDir")
