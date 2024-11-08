@@ -57,7 +57,7 @@ The model is exported using joblib for use in Classify audio script to avoid tra
 
 ### File structure
 We have the following file structure to allow the code to execute (Windows tree command):
-Root: <-- envP7RootDir points here
+Root: ⟵ envP7RootDir points here
 +---Courses
 ¦   +---PAD
 ¦   +---Performance and Reliability Analyses of Communication Networks
