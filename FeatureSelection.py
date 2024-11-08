@@ -110,7 +110,6 @@ def biplot(data_S, labels,column_order):
 
     dataPCA = dataPCA[:, :2]
 
-
     plt.figure()
     # Create a biplot
     xs = dataPCA[:,0]
@@ -131,10 +130,11 @@ def biplot(data_S, labels,column_order):
         x, y = coeff[0,i], coeff[1,i]
         plt.arrow(0, 0, x, y, color='red', alpha=0.5)
         plt.text(x* 1.1, y * 1.1, column_order[i], color='black', ha='center', va='center', bbox=dict(facecolor='white', edgecolor='red', boxstyle='round,pad=0.5'))
-    plt.xlabel("PC1")
-    plt.ylabel("PC2")
+    plt.xlabel("$PC_1$")
+    plt.ylabel("$PC_2$")
     plt.grid()
-
+    plt.title('Biplot of first two principal components')
+    plt.savefig('Figures\\Biplot.pdf')
     #plt.show()
 
 def main():
@@ -162,11 +162,11 @@ def main():
                     'Chroma_Mean', 'Chroma_Var', 'ZCR', 'STE', 'RMS']
     
     ##Feature selection tests
-    VarianceTest(features)
+    #VarianceTest(features)
 
-    KbestTest(features_S,labels,column_order)
+    #KbestTest(features_S,labels,column_order)
 
-    RecursiveElimFeature(data_S,labels,column_order)
+    #RecursiveElimFeature(data_S,labels,column_order)
 
     biplot(data_S,labels,column_order)
     plt.show()

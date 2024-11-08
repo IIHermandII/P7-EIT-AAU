@@ -62,9 +62,9 @@ def ReadCVS(NewestDataFileName):
     dataLDA = lda.transform(data_S)
 
     #Plot the data (raw(MFCC1,MFCC2)?, PCA, LDA)
-    #plt.figure(figsize=(10, 10))
-    # plt.subplot(1,3,1)
     plt.figure()
+    plt.subplot(1,2,1)
+    #plt.figure()
     list = ['BI','BO','CT','V','M']
     for i in list:
         index = labels == i
@@ -73,14 +73,16 @@ def ReadCVS(NewestDataFileName):
     plt.xlabel("$PC_1$")
     plt.ylabel("$PC_2$")
     plt.legend(list)
-    plt.savefig('Figures\\PCA data.pdf')
+    #plt.savefig('Figures\\PCA data.pdf')
 
-    # plt.subplot(1,3,2)
-    # for i in list:
-    #     index = labels == i
-    #     plt.scatter(dataLDA[index,0],dataLDA[index,1],s=6)
-    # plt.title("LDA")
-    # plt.legend(list)
+    plt.subplot(1,2,2)
+    for i in list:
+        index = labels == i
+        plt.scatter(dataLDA[index,0],dataLDA[index,1],s=6)
+    plt.title("LDA analysis")
+    plt.xlabel("$LDA_1$")
+    plt.ylabel("$LDA_2$")
+    plt.legend(list)
 
     # plt.subplot(1,3,3)
     # for i in list:
@@ -103,42 +105,6 @@ def ReadCVS(NewestDataFileName):
         if (test[i] < -0.5):
             errors.append(lineCSV[i]+2)#Correct for removal of header line and start at 0 in code
     print("Potential misclassification (CSV line): ",errors)
-
-def Nicoletta(file):
-    df = pd.read_csv(file)
-    X = df.drop(['Filename'], axis=1)
-    a = X.iloc[:, :-1].values  # The last column is the label
-    b = X.iloc[:, -1].values
-
-    a_S = StandardScaler().fit_transform(a)
-    pca = PCA(n_components=2).fit(a_S)
-    lda = LDA(n_components=2).fit(a_S,b)
-    dataPCA = pca.transform(a_S)
-    dataLDA = lda.transform(a_S)
-
-    plt.figure(figsize=(15, 5))
-    plt.subplot(1,3,1)
-    list = ['breathing','noise','mixed','voice']
-    for i in list:
-        index = b == i
-        plt.scatter(dataPCA[index,0],dataPCA[index,1],s=2)
-    plt.title("PCA")
-    plt.legend(list)
-
-    plt.subplot(1,3,2)
-    for i in list:
-        index = b == i
-        plt.scatter(dataLDA[index,0],dataLDA[index,1],s=2)
-    plt.title("LDA")
-    plt.legend(list)
-
-    plt.subplot(1,3,3)
-    for i in list:
-        index = b == i
-        plt.scatter(a[index,0],a[index,1],s=2)
-    plt.title("Raw Data")
-    plt.legend(list)
-    print("PCA Variance " , sum(pca.explained_variance_ratio_))
 
 def screePlot(file):
     #Read CSV file

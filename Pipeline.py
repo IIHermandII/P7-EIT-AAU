@@ -5,7 +5,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import joblib
 import warnings
+import time
 
+from sklearn import set_config
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.feature_selection import RFECV
@@ -40,7 +42,7 @@ def GetNewestDataFileName():
 def main():
     warnings.filterwarnings("ignore")
     #Use this variable to select between our (handlabelled) and total (self labelled) datasets
-    selectTotal = True
+    selectTotal = False
 
     if selectTotal:
         envP7RootDir = os.getenv("P7RootDir")
@@ -56,13 +58,16 @@ def main():
     labels = df['Label']
 
     print("Data loaded")
-    print("Training model may take several minutes depending on selected\nNO PROGRESS BE PATIENT :)")
+    print("Training model may take several minutes depending on selected\nNO PROGRESS BAR BE PATIENT :)")
     model = LogisticRegression()
     pipe = Pipeline([('Scale data',StandardScaler()),
                     ('Feature selection',RFECV(estimator=model,cv = StratifiedKFold(5))),
                     ('Classification',model)])
-    
+
+    start_time = time.process_time()
     pipe.fit(data,labels)
+    print("Initial fit took --- %.3f seconds ---" % (time.process_time() - start_time))
+
     print("Initial model fit (all features)")
 
     pipe[1].feature_names_in_ = data.columns.values
@@ -85,7 +90,10 @@ def main():
     # Split the dataset into training and testing sets (80/20)
     x_train, x_test, y_train, y_test = train_test_split(data_reduced, labels, test_size=0.2, random_state=420)
     
+    start_time = time.process_time()
     pipe.fit(x_train,y_train)
+    print("Final fit took --- %.3f seconds ---" % (time.process_time() - start_time))
+
     print("Final model fit (selected features)")
 
     pipe[1].feature_names_in_ = data_reduced.columns.values
@@ -115,7 +123,7 @@ def main():
     plt.show()
 
     # Save the model to disk
-    joblib.dump(pipe, 'Models\\LR_model_trainset.sav')
+    #joblib.dump(pipe, 'Models\\LR_model_trainset.sav')
 
     print("Model saved \nSCRIPT DONE")
 
