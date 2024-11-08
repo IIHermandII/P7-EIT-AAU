@@ -4,16 +4,13 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-from sklearn.feature_selection import SelectKBest, f_classif, mutual_info_classif
-
+from sklearn.feature_selection import RFECV, SelectKBest, f_classif, mutual_info_classif
 from sklearn.preprocessing import StandardScaler
-from sklearn.feature_selection import RFECV
 from sklearn.linear_model import LogisticRegression, Perceptron
 from sklearn.model_selection import StratifiedKFold
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.decomposition import PCA
 from sklearn import svm
-
 
 def GetNewestDataFileName():
     #Check for env variable - error if not present
@@ -162,11 +159,11 @@ def main():
                     'Chroma_Mean', 'Chroma_Var', 'ZCR', 'STE', 'RMS']
     
     ##Feature selection tests
-    #VarianceTest(features)
+    VarianceTest(features)
 
-    #KbestTest(features_S,labels,column_order)
+    KbestTest(features_S,labels,column_order)
 
-    #RecursiveElimFeature(data_S,labels,column_order)
+    RecursiveElimFeature(data_S,labels,column_order)
 
     biplot(data_S,labels,column_order)
     plt.show()

@@ -2,7 +2,6 @@ import os
 import pandas as pd
 import re
 
-
 def GetNewestDataFileName():
     #Check for env variable - error if not present
     envP7RootDir = os.getenv("P7RootDir")
@@ -26,7 +25,6 @@ def GetNewestDataFileName():
     #Sort dates and return newest
     dirDates = sorted(dirDates,key=lambda l:l[1],reverse=True) # Take oldest data first i belive 
     return(workDir + "\\" + dirDates[0][1])
-
 
 def main():
     envP7RootDir = os.getenv("P7RootDir")

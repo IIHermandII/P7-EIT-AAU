@@ -1,16 +1,12 @@
 import os
 import numpy as np
-from scipy.io import loadmat
-from scipy.stats import multivariate_normal as norm
+import re
+import pandas as pd
+
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
-import re   # Import the regular expression module
-import pandas as pd
-from sklearn.preprocessing import StandardScaler
-import matplotlib.pyplot as plt
-import numpy as np
 
 def GetNewestDataFileName():
     #Check for env variable - error if not present
@@ -131,7 +127,6 @@ def main():
    NewestDataFileName = GetNewestDataFileName() 
    print(NewestDataFileName)
    ReadCVS(NewestDataFileName)
-   #Nicoletta("labeled_first_training_final.csv")
    screePlot(NewestDataFileName)
    plt.show()
 
