@@ -4,14 +4,16 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import joblib
+import warnings
+import time
 
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.feature_selection import RFECV
+from sklearn.feature_selection import RFECV, RFE
 from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, HistGradientBoostingClassifier
 from sklearn.model_selection import train_test_split, StratifiedKFold
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, ConfusionMatrixDisplay
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, HistGradientBoostingClassifier
 
 def GetNewestDataFileName():
     #Check for env variable - error if not present
@@ -38,7 +40,16 @@ def GetNewestDataFileName():
     return(workDir + "\\" + dirDates[0][1])
 
 def main():
-    NewestDataFileName = GetNewestDataFileName() 
+    warnings.filterwarnings("ignore")
+    #Use this variable to select between our (handlabelled) and total (self labelled) datasets
+    selectTotal = False
+
+    if selectTotal:
+        envP7RootDir = os.getenv("P7RootDir")
+        NewestDataFileName = envP7RootDir + "\\Data\\Total datasets\\Total data file (LR).csv"
+    else:
+        NewestDataFileName = GetNewestDataFileName()
+
     print("Selected data file: ", NewestDataFileName)
     # Load the merged dataset
     df = pd.read_csv(NewestDataFileName)
@@ -47,15 +58,20 @@ def main():
     labels = df['Label']
 
     print("Data loaded")
-
-    model = GradientBoostingClassifier()
-    print("Model generated")
-
+    print("Training model may take several minutes depending on selected\nNO PROGRESS BE PATIENT :)")
+    model = GradientBoostingClassifier(verbose=1,n_estimators=50,tol=0.01,max_depth=5)
+    # model = HistGradientBoostingClassifier()
+    # pipe = Pipeline([('Scale data',StandardScaler()),
+    #                 ('Feature selection',RFECV(estimator=model,cv = StratifiedKFold(5),n_jobs=-1,step=1)),
+    #                 ('Classification',model)])
+    
     pipe = Pipeline([('Scale data',StandardScaler()),
-                    ('Feature selection',RFECV(estimator=model,cv = StratifiedKFold(5),n_jobs=-1,step=4)),
+                    ('Feature selection',RFE(estimator=model, n_features_to_select=9)),
                     ('Classification',model)])
     
+    start_time = time.process_time()
     pipe.fit(data,labels)
+    print("Initial fit took --- %.3f seconds ---" % (time.process_time() - start_time))
     print("Initial model fit (all features)")
 
     pipe[1].feature_names_in_ = data.columns.values
@@ -63,16 +79,16 @@ def main():
     print("Selected features:\n",selected_features)
 
     #Plot results
-    cv_results = pd.DataFrame(pipe[1].cv_results_)
-    plt.figure()
-    plt.xlabel("Number of features selected")
-    plt.ylabel("Mean test accuracy")
-    plt.errorbar(x=cv_results["n_features"],
-                y=cv_results["mean_test_score"],
-                yerr=cv_results["std_test_score"])
-    plt.title("Recursive Feature Elimination \nwith correlated features")
+    # cv_results = pd.DataFrame(pipe[1].cv_results_)
+    # plt.figure()
+    # plt.xlabel("Number of features selected")
+    # plt.ylabel("Mean test accuracy")
+    # plt.errorbar(x=cv_results["n_features"],
+    #             y=cv_results["mean_test_score"],
+    #             yerr=cv_results["std_test_score"])
+    # plt.title("Recursive Feature Elimination \nwith correlated features")
 
-    print("Feature plot created")
+    # print("Feature plot created")
 
     data_reduced = data[selected_features]
     # Split the dataset into training and testing sets (80/20)
@@ -90,6 +106,10 @@ def main():
     print("Classification Report on Test Set:")
     print(classification_report(y_test, pred))
 
+    f = open("Models\\GBDT classification.txt", "w")
+    f.write(classification_report(y_test, pred))
+    f.close()
+
     print("Classification report")
 
     cm = confusion_matrix(y_test, pred)
@@ -104,9 +124,9 @@ def main():
     plt.show()
 
     # Save the model to disk
-    joblib.dump(pipe, 'GBDT_model_trainset.sav')
+    joblib.dump(pipe, 'Models\\GBDT_model_trainset.sav')
 
-    print("Model saved \n SCRIPT DONE")
+    print("Model saved \nSCRIPT DONE")
 
 if __name__ == "__main__":
     main()
