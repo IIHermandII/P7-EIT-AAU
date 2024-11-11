@@ -14,6 +14,7 @@ from sklearn.feature_selection import RFECV, RFE
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split, StratifiedKFold
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, ConfusionMatrixDisplay
+from sklearn.ensemble import RandomForestClassifier
 
 def GetNewestDataFileName():
     #Check for env variable - error if not present
@@ -43,35 +44,37 @@ def main():
     warnings.filterwarnings("ignore")
     envP7RootDir = os.getenv("P7RootDir")
     #Use this variable to select between our (handlabelled) and total (self labelled) datasets
-    selectTotal = False
 
-    if selectTotal:
-        NewestDataFileName = envP7RootDir + "\\Data\\Total datasets\\Total data file (LR).csv"
-    else:
-        NewestDataFileName = GetNewestDataFileName()
+    TotalDataFileName = envP7RootDir + "\\Data\\Total datasets\\Total data file (LR).csv"
+    OurDataFileName = GetNewestDataFileName()
+    dataFile = OurDataFileName
 
-    print("Selected data file: ", NewestDataFileName)
+    print("Selected data file: ", dataFile)
     # Load the merged dataset
-    df = pd.read_csv(NewestDataFileName)
+    df = pd.read_csv(dataFile)
 
     data = df.drop(['Filename','Label'], axis=1)
     labels = df['Label']
 
+    # Split the dataset into training and testing sets (80/20)
+    x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.2, random_state=420)
+
     print("Data loaded")
     print("Training model may take several minutes depending on selected\nNO PROGRESS BAR BE PATIENT :)")
-    model = LogisticRegression()
-    # pipe = Pipeline([('Scale data',StandardScaler()),
-    #                 ('Feature selection',RFECV(estimator=model,cv = StratifiedKFold(5),min_features_to_select=4)),
-    #                 ('Classification',model)])
     
-    pipe = Pipeline([('Scale data',StandardScaler()),
-                    ('Feature selection',RFE(estimator=model,n_features_to_select=6)),
-                    ('Classification',model)])
+    selectRFE = True
+    model = LogisticRegression()
+    
+    if selectRFE:
+        pipe = Pipeline([('Scale data',StandardScaler()),
+                        ('Feature selection',RFE(estimator=model,n_features_to_select=8))])
+    else:
+        pipe = Pipeline([('Scale data',StandardScaler()),
+                        ('Feature selection',RFECV(estimator=model,cv = StratifiedKFold(5),min_features_to_select=4))])
 
-    start_time = time.process_time()
-    pipe.fit(data,labels)
-    print(pipe[1].ranking_)
-    print("Initial fit took --- %.3f seconds ---" % (time.process_time() - start_time))
+    start_time = time.perf_counter()
+    pipe.fit(x_train,y_train)
+    print("Fit + feature elimination took --- %.3f seconds ---" % (time.perf_counter() - start_time))
 
     print("Initial model fit (all features)")
 
@@ -79,30 +82,18 @@ def main():
     selected_features = pipe[1].get_feature_names_out()
     print("Selected features:\n",selected_features)
 
-    # #Plot results
-    # cv_results = pd.DataFrame(pipe[1].cv_results_)
-    # plt.figure()
-    # plt.xlabel("Number of features selected")
-    # plt.ylabel("Mean test accuracy")
-    # plt.errorbar(x=cv_results["n_features"],
-    #             y=cv_results["mean_test_score"],
-    #             yerr=cv_results["std_test_score"])
-    # plt.title("Recursive Feature Elimination \nwith correlated features")
+    if not selectRFE:
+        #Plot results
+        cv_results = pd.DataFrame(pipe[1].cv_results_)
+        plt.figure()
+        plt.xlabel("Number of features selected")
+        plt.ylabel("Mean test accuracy")
+        plt.errorbar(x=cv_results["n_features"],
+                     y=cv_results["mean_test_score"],
+                     yerr=cv_results["std_test_score"])
+        plt.title("Recursive Feature Elimination \nwith correlated features")
 
-    # print("Feature plot created")
-
-    data_reduced = data[selected_features]
-    # Split the dataset into training and testing sets (80/20)
-    x_train, x_test, y_train, y_test = train_test_split(data_reduced, labels, test_size=0.2, random_state=420)
-    
-    start_time = time.process_time()
-    pipe.fit(x_train,y_train)
-    print("Final fit took --- %.3f seconds ---" % (time.process_time() - start_time))
-
-    print("Final model fit (selected features)")
-
-    pipe[1].feature_names_in_ = data_reduced.columns.values
-    print("Names features (reduced):\n",pipe[1].get_feature_names_out())
+        print("Feature plot created")
 
     pred = pipe.predict(x_test)
     print("LR model")
@@ -110,9 +101,9 @@ def main():
     print("Classification Report on Test Set:")
     print(classification_report(y_test, pred))
 
-    f = open("Models\\LR classification.txt", "w")
-    f.write(classification_report(y_test, pred))
-    f.close()
+    # f = open("Models\\LR classification.txt", "w")
+    # f.write(classification_report(y_test, pred))
+    # f.close()
 
     print("Classification report")
 
@@ -125,11 +116,10 @@ def main():
 
     print("Confusion matrix created")
 
-    plt.show()
-
     # Save the model to disk
     #joblib.dump(pipe, 'Models\\LR_model_trainset.sav')
 
+    plt.show()
     print("Model saved \nSCRIPT DONE")
 
 if __name__ == "__main__":

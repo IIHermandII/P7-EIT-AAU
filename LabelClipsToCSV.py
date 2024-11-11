@@ -13,7 +13,7 @@ def OprationExplanation():
     print("1.\tenv ( Environment variables / System variables):")
     print("\tP7RootDir : C:\\path\\to\\P7  i.g C:\\Users\\emill\\OneDrive - Aalborg Universitet\\P7 ")
     print("2.\tAll files at: P7\\Data\\Label clips. to have same structure")
-    print("\t<name>-<number>-...-<number>.wov")
+    print("\t<name>-<number>-...-<number>.wav")
 
 def GetDataFiles():
     envP7RootDir = os.getenv("P7RootDir")

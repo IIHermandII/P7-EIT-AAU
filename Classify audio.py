@@ -158,10 +158,10 @@ def main():
     #print("Model self labelled data output")
 
     #Export predictions document (Pred | start samp | end samp)
-    f = open("Predictions.txt", "w")
-    for pred in predictions:
-        f.write(pred + "\n")
-    f.close()
+    # f = open("Models\\Predictions (LR).txt", "w")
+    # for pred in predictions:
+    #     f.write(pred + "\n")
+    # f.close()
 
     print("Predictions data output")
 

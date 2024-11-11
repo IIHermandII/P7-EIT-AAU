@@ -4,16 +4,13 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-from sklearn.feature_selection import SelectKBest, f_classif, mutual_info_classif
-
+from sklearn.feature_selection import RFECV, SelectKBest, f_classif, mutual_info_classif
 from sklearn.preprocessing import StandardScaler
-from sklearn.feature_selection import RFECV
 from sklearn.linear_model import LogisticRegression, Perceptron
 from sklearn.model_selection import StratifiedKFold
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.decomposition import PCA
 from sklearn import svm
-
 
 def GetNewestDataFileName():
     #Check for env variable - error if not present
@@ -110,7 +107,6 @@ def biplot(data_S, labels,column_order):
 
     dataPCA = dataPCA[:, :2]
 
-
     plt.figure()
     # Create a biplot
     xs = dataPCA[:,0]
@@ -131,10 +127,11 @@ def biplot(data_S, labels,column_order):
         x, y = coeff[0,i], coeff[1,i]
         plt.arrow(0, 0, x, y, color='red', alpha=0.5)
         plt.text(x* 1.1, y * 1.1, column_order[i], color='black', ha='center', va='center', bbox=dict(facecolor='white', edgecolor='red', boxstyle='round,pad=0.5'))
-    plt.xlabel("PC1")
-    plt.ylabel("PC2")
+    plt.xlabel("$PC_1$")
+    plt.ylabel("$PC_2$")
     plt.grid()
-
+    plt.title('Biplot of first two principal components')
+    plt.savefig('Figures\\Biplot.pdf')
     #plt.show()
 
 def main():
