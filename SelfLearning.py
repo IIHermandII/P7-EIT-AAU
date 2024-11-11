@@ -7,7 +7,35 @@ from sklearn.metrics import accuracy_score
 import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import LabelEncoder
-from GetData import GetNewestDataFileNamer
+import os
+import re
+
+def GetNewestDataFileNamer(x):
+    #Check for env variable - error if not present
+    envP7RootDir = os.getenv("P7RootDir")
+    if envP7RootDir is None:
+        print("---> If you are working in vscode\n---> you need to restart the aplication\n---> After you have made a env\n---> for vscode to see it!!")
+        print("---> You need to make a env called 'P7RootDir' containing the path to P7 root dir")
+        raise ValueError('Environment variable not found (!env)')
+    
+    if x == 'labeled':
+        #Enter CSV directory, change the directory for labeled data and unlabeled data
+        workDir = envP7RootDir + "\\Data\\CSV files"
+    else:
+        workDir = envP7RootDir + "\\Data\\Refined data\\Unlabeled data\\PROCESSED DATA"
+    
+    #Find all dates from the files
+    dirDates = []
+    for file in os.listdir(workDir):
+        onlyDate = re.findall(r'\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}', file)
+        new_string = str(onlyDate).replace("-", "")
+        new_string = new_string.replace("_","")
+        new_string = new_string.strip("[]'")
+        dirDates.append([int(new_string),file])
+    
+    #Sort dates and return newest
+    dirDates = sorted(dirDates,key=lambda l:l[1],reverse=True) # Take oldest data first i belive 
+    return(workDir + "\\" + dirDates[0][1])
 
 
 # Load data
@@ -79,4 +107,5 @@ def SelfLearning(labeled_data, unlabeled_data):
 
     plt.tight_layout()
     plt.show()
+    
 SelfLearning(labeled_data, unlabeled_data)
