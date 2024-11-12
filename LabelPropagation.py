@@ -71,17 +71,8 @@ def LabelPropagation(labeled_data, unlabeled_data):
     X_pca = pca.fit_transform(np.vstack((dataLabeled, dataUnlabeled)))
     dataLabeled_pca = pca.transform(dataLabeled)
     # Plot the combined labels in the same figure
-    plt.figure(figsize=(12, 6))
+    plt.figure(figsize=(12, 12))
 
-    # Plot the labeled data
-    plt.subplot(1, 2, 1)
-    plt.scatter(X_pca[:len(labels), 0], X_pca[:len(labels), 1], c=encoded_labels, cmap=plt.cm.Paired, edgecolor='k', s=20)
-    plt.title('Label Propagation Data')
-    plt.xlabel('Principal Component 1')
-    plt.ylabel('Principal Component 2')
-
-    # Plot the predicted labels for the unlabeled data
-    plt.subplot(1, 2, 2)
     plt.scatter(X_pca[len(labels):, 0], X_pca[len(labels):, 1], c=encoded_predicted_labels, cmap=plt.cm.Paired, edgecolor='k', s=20)
     plt.title('Predicted Labels for Unlabeled Data')
     plt.xlabel('Principal Component 1')
