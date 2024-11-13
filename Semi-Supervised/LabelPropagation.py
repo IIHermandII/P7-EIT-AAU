@@ -38,51 +38,52 @@ def GetNewestDataFileNamer(x):
     dirDates = sorted(dirDates,key=lambda l:l[1],reverse=True) # Take oldest data first i belive 
     return(workDir + "\\" + dirDates[0][1])
 
+labeled_data = pd.read_csv(GetNewestDataFileNamer('labeled'))
+unlabeled_data = pd.read_csv(GetNewestDataFileNamer('unlabeled'))
 
-def LabelPropagation(labeled_data, unlabeled_data):
-
-    labels = labeled_data.iloc[:, 1]
-    dataLabeled = labeled_data.iloc[:,2:]
-    dataUnlabeled = unlabeled_data.iloc[:,2:]
+labels = labeled_data.iloc[:, 1]
+dataLabeled = labeled_data.iloc[:,2:]
+dataUnlabeled = unlabeled_data.iloc[:,2:]
 
 
-    # Standardize the data
-    dataLabeled = StandardScaler().fit_transform(dataLabeled)
-    dataUnlabeled = StandardScaler().fit_transform(dataUnlabeled)
-    # Create a LabelSpreading model
-    label_spread = LabelSpreading(kernel="knn", alpha=0.8)
-    label_spread.fit(dataLabeled, labels)
+# Standardize the data
+dataLabeled = StandardScaler().fit_transform(dataLabeled)
+dataUnlabeled = StandardScaler().fit_transform(dataUnlabeled)
+# Create a LabelSpreading model
+label_spread = LabelSpreading(kernel="knn", alpha=0.8)
+label_spread.fit(dataLabeled, labels)
 
-    # Predict labels for the unlabeled data
-    predicted_labels = label_spread.predict(dataUnlabeled)
+# Predict labels for the unlabeled data
+predicted_labels = label_spread.predict(dataUnlabeled)
 
-    # Evaluate the model on the labeled data
-    y_pred = label_spread.predict(dataLabeled)
-    accuracy = accuracy_score(labels, y_pred)
-    print(f'Accuracy: {accuracy}')
+# Evaluate the model on the labeled data
+y_pred = label_spread.predict(dataLabeled)
+accuracy = accuracy_score(labels, y_pred)
+print(f'Accuracy: {accuracy}')
 
-    # Encode labels as colors
-    label_encoder = LabelEncoder()
-    encoded_labels = label_encoder.fit_transform(labels)
-    encoded_predicted_labels = label_encoder.transform(predicted_labels)
+# Encode labels as colors
+label_encoder = LabelEncoder()
+encoded_labels = label_encoder.fit_transform(labels)
+encoded_predicted_labels = label_encoder.transform(predicted_labels)
 
-    # Plot the KNN classification results using PCA for visualization
-    pca = PCA(n_components=2)
-    X_pca = pca.fit_transform(np.vstack((dataLabeled, dataUnlabeled)))
-    dataLabeled_pca = pca.transform(dataLabeled)
-    # Plot the combined labels in the same figure
-    plt.figure(figsize=(12, 12))
+# Plot the KNN classification results using PCA for visualization
+pca = PCA(n_components=2)
+X_pca = pca.fit_transform(np.vstack((dataLabeled, dataUnlabeled)))
+dataLabeled_pca = pca.transform(dataLabeled)
 
-    plt.scatter(X_pca[len(labels):, 0], X_pca[len(labels):, 1], c=encoded_predicted_labels, cmap=plt.cm.Paired, edgecolor='k', s=20)
-    plt.title('Predicted Labels for Unlabeled Data')
-    plt.xlabel('Principal Component 1')
-    plt.ylabel('Principal Component 2')
+# Plot the combined labels in the same figure
+plt.figure(figsize=(10, 10))
 
-    plt.tight_layout()
-    plt.show()
+plt.scatter(X_pca[len(labels):, 0], X_pca[len(labels):, 1], c=encoded_predicted_labels, cmap=plt.cm.Paired, edgecolor='k', s=20)
+plt.title('Label Propagation Data')
+plt.xlabel('Principal Component 1')
+plt.ylabel('Principal Component 2')
+
+plt.tight_layout()
+plt.show()
 
 
 labeled_data = pd.read_csv(GetNewestDataFileNamer('labeled'))
 unlabeled_data = pd.read_csv(GetNewestDataFileNamer('unlabeled'))
 LabelPropagation(labeled_data, unlabeled_data)
-    
+

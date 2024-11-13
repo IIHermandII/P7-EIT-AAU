@@ -1,7 +1,6 @@
-import numpy as np
 import os
 import re
-from sklearn import cluster
+from sklearn.mixture import GaussianMixture
 from sklearn.preprocessing import StandardScaler
 import pandas as pd
 from sklearn.decomposition import PCA
@@ -47,14 +46,17 @@ X = StandardScaler().fit_transform(dataLabeled)
 pca = PCA(n_components=10).fit(dataLabeled)
 X = pca.transform(dataLabeled)
 
-Birch = cluster.Birch(n_clusters=5)
-Birch.fit(X)
+# Create a KMeans model
+Gaussian = GaussianMixture(n_components=5, covariance_type="full", random_state=42)
+Gaussian.fit(X)
 
 # Predict the labels for the data
-y_pred = Birch.predict(X)
+y_pred = Gaussian.predict(X)
 
+
+# Plot the clustered data
 plt.figure(figsize=(6, 6))
-plt.title("Clustered Data", size=18)
+plt.title("Gaussian Data", size=18)
 plt.scatter(X[:, 0], X[:, 1], c=y_pred, s=10, cmap='viridis')
 plt.xlabel("Feature 1")
 plt.ylabel("Feature 2")

@@ -88,19 +88,11 @@ def SelfLearning(labeled_data, unlabeled_data):
     encoded_predicted_labels = label_encoder.transform(predicted_labels)
 
     # Plot the combined labels in the same figure
-    plt.figure(figsize=(12, 6))
-
-    # Plot the labeled data
-    plt.subplot(1, 2, 1)
-    plt.scatter(X_pca[:len(Y), 0], X_pca[:len(Y), 1], c=encoded_labels, cmap=plt.cm.Paired, edgecolor='k', s=20)
-    plt.title('Labeled Data')
-    plt.xlabel('Principal Component 1')
-    plt.ylabel('Principal Component 2')
+    plt.figure(figsize=(10, 10))
 
     # Plot the predicted labels for the unlabeled data
-    plt.subplot(1, 2, 2)
     plt.scatter(X_pca[len(Y):, 0], X_pca[len(Y):, 1], c=encoded_predicted_labels, cmap=plt.cm.Paired, edgecolor='k', s=20)
-    plt.title('Predicted Labels for Unlabeled Data')
+    plt.title('Predicted SelfLearning Labels for Unlabeled Data')
     plt.xlabel('Principal Component 1')
     plt.ylabel('Principal Component 2')
 

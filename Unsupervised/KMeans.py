@@ -1,14 +1,10 @@
-import numpy as np
 import os
 import re
 from sklearn import cluster
 from sklearn.preprocessing import StandardScaler
 import pandas as pd
 from sklearn.decomposition import PCA
-from sklearn.metrics import adjusted_rand_score, silhouette_score
 import matplotlib.pyplot as plt
-from sklearn.metrics import classification_report
-from sklearn.preprocessing import LabelEncoder
 
 def GetNewestDataFileNamer(x):
     #Check for env variable - error if not present
@@ -57,21 +53,6 @@ kmeans.fit(X)
 # Predict the labels for the data
 y_pred = kmeans.predict(X)
 
-# encoded_labels = LabelEncoder().fit_transform(labels)
-
-# # Evaluate the model
-
-# ari = adjusted_rand_score(encoded_labels, y_pred)
-# if len(set(y_pred)) > 1:  # Check if there is more than one cluster
-#     sil = silhouette_score(X, y_pred, metric='euclidean')
-# else:
-#     sil = -1  # Assign a default value if only one cluster is found
-
-# # Print the evaluation metrics
-# print(f"Adjusted Rand Index: {ari}")
-# print(f"Silhouette Score: {sil}")
-# print("Classification Report:")
-# print(classification_report(encoded_labels, y_pred))
 
 # Plot the clustered data
 plt.figure(figsize=(6, 6))
