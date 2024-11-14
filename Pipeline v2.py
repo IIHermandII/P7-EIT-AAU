@@ -7,14 +7,15 @@ import joblib
 import warnings
 import time
 
-from sklearn import set_config
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.feature_selection import RFECV, RFE
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split, StratifiedKFold
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, ConfusionMatrixDisplay
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn import svm
+from sklearn.decomposition import PCA
 
 def GetNewestDataFileName():
     #Check for env variable - error if not present
@@ -40,14 +41,39 @@ def GetNewestDataFileName():
     dirDates = sorted(dirDates,key=lambda l:l[1],reverse=True) # Take oldest data first i belive 
     return(workDir + "\\" + dirDates[0][1])
 
+def selectModel(str):
+    match str:
+        case "LR":
+            model = LogisticRegression()
+        case "SVM":
+            model = svm.SVC(kernel='linear',max_iter=1000)
+        case "RF":
+            model = RandomForestClassifier(random_state=420, n_jobs=-1)
+        case "GBDT":
+            model = GradientBoostingClassifier(random_state=420)
+
+    return model
+
+def selectDataset(str):
+    envP7RootDir = os.getenv("P7RootDir")
+    match str:
+        case "Trainset":
+            fileName = envP7RootDir + "\\Data\\Total datasets\\Total data file (LR).csv"
+        case "Expanded":
+            fileName = GetNewestDataFileName()
+
+    return fileName
+
 def main():
     warnings.filterwarnings("ignore")
-    envP7RootDir = os.getenv("P7RootDir")
     #Use this variable to select between our (handlabelled) and total (self labelled) datasets
 
-    TotalDataFileName = envP7RootDir + "\\Data\\Total datasets\\Total data file (LR).csv"
-    OurDataFileName = GetNewestDataFileName()
-    dataFile = OurDataFileName
+    selectRFE = True
+    modelName = "GBDT"
+    model = selectModel(modelName)
+
+    datasetName = "Trainset"
+    dataFile = selectDataset(datasetName)
 
     print("Selected data file: ", dataFile)
     # Load the merged dataset
@@ -61,19 +87,20 @@ def main():
 
     print("Data loaded")
     print("Training model may take several minutes depending on selected\nNO PROGRESS BAR BE PATIENT :)")
-    
-    selectRFE = True
-    model = LogisticRegression()
-    
+        
     if selectRFE:
         pipe = Pipeline([('Scale data',StandardScaler()),
-                        ('Feature selection',RFE(estimator=model,n_features_to_select=8))])
+                        ('Feature selection',RFE(estimator=model,n_features_to_select=10))])
+        # pipe = Pipeline([('Scale data',StandardScaler()),
+        #                   ('PCA',PCA(n_components=10)),
+        #                   ('Model',model)])
     else:
         pipe = Pipeline([('Scale data',StandardScaler()),
                         ('Feature selection',RFECV(estimator=model,cv = StratifiedKFold(5),min_features_to_select=4))])
 
     start_time = time.perf_counter()
     pipe.fit(x_train,y_train)
+
     print("Fit + feature elimination took --- %.3f seconds ---" % (time.perf_counter() - start_time))
 
     print("Initial model fit (all features)")
@@ -96,14 +123,14 @@ def main():
         print("Feature plot created")
 
     pred = pipe.predict(x_test)
-    print("LR model")
+    print(modelName +" model")
     print(f"Accuracy on Test Set: {accuracy_score(y_test, pred):.4f}")
     print("Classification Report on Test Set:")
-    print(classification_report(y_test, pred))
+    print(classification_report(y_test, pred,digits=3))
 
-    # f = open("Models\\LR classification.txt", "w")
-    # f.write(classification_report(y_test, pred))
-    # f.close()
+    f = open("Models\\ " + modelName + " classification (initial).txt", "w")
+    f.write(classification_report(y_test, pred,digits=3))
+    f.close()
 
     print("Classification report")
 
@@ -117,7 +144,7 @@ def main():
     print("Confusion matrix created")
 
     # Save the model to disk
-    #joblib.dump(pipe, 'Models\\LR_model_trainset.sav')
+    joblib.dump(pipe, "Models\\" + modelName + "_model_trainset.sav")
 
     plt.show()
     print("Model saved \nSCRIPT DONE")
