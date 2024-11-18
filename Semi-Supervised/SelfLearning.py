@@ -42,62 +42,60 @@ def GetNewestDataFileNamer(x):
 labeled_data = pd.read_csv(GetNewestDataFileNamer('labeled'))
 unlabeled_data = pd.read_csv(GetNewestDataFileNamer('unlabeled'))
 
-def SelfLearning(labeled_data, unlabeled_data):
-    complete_data_labels = labeled_data.iloc[:, 1]
-    complete_data_data = labeled_data.iloc[:,2:]
 
-    #Keep data and lables
-    data = labeled_data.iloc[:, 2:].values
-    labels = labeled_data.iloc[:, 1].values
+complete_data_labels = labeled_data.iloc[:, 1]
+complete_data_data = labeled_data.iloc[:,2:]
 
-    unlabeled = unlabeled_data.drop((['Filename', 'Label']), axis=1)
+#Keep data and lables
+data = labeled_data.iloc[:, 2:].values
+labels = labeled_data.iloc[:, 1].values
 
-    # Standardize the data
-    complete_data_data = StandardScaler().fit_transform(complete_data_data)
-    X = StandardScaler().fit_transform(unlabeled)
-    Y = StandardScaler().fit_transform(data)
+unlabeled = unlabeled_data.drop((['Filename', 'Label']), axis=1)
 
-    # Create a SelfTrainingClassifier with a base estimator
-    base_estimator = KNeighborsClassifier(n_neighbors=5)
-    self_training_model = SelfTrainingClassifier(base_estimator=base_estimator)
+# Standardize the data
+complete_data_data = StandardScaler().fit_transform(complete_data_data)
+X = StandardScaler().fit_transform(unlabeled)
+Y = StandardScaler().fit_transform(data)
 
-    # Fit the model
-    self_training_model.fit(Y, labels)
+# Create a SelfTrainingClassifier with a base estimator
+base_estimator = KNeighborsClassifier(n_neighbors=5)
+self_training_model = SelfTrainingClassifier(base_estimator=base_estimator)
 
-    # Predict labels for the unlabeled data
-    predicted_labels = self_training_model.predict(X)
-    print(predicted_labels)
+# Fit the model
+self_training_model.fit(Y, labels)
 
-    # Evaluate the model on the labeled data
-    y_pred = self_training_model.predict(Y)
-    accuracy = accuracy_score(labels, y_pred)
-    print(f'Accuracy: {accuracy}')
+# Predict labels for the unlabeled data
+predicted_labels = self_training_model.predict(X)
+print(predicted_labels)
 
-
-    # Plot the KNN classification results using PCA for visualization
+# Evaluate the model on the labeled data
+y_pred = self_training_model.predict(Y)
+accuracy = accuracy_score(labels, y_pred)
+print(f'Accuracy: {accuracy}')
 
 
-    pca = PCA(n_components=2)
-    X_pca = pca.fit_transform(np.vstack((Y, X)))
-    complete_data_data_pca = pca.transform(complete_data_data)
-
-    # Encode labels as colors
-
-    label_encoder = LabelEncoder()
-    encoded_labels = label_encoder.fit_transform(labels)
-    encoded_predicted_labels = label_encoder.transform(predicted_labels)
-
-    # Plot the combined labels in the same figure
-    plt.figure(figsize=(10, 10))
-
-    # Plot the predicted labels for the unlabeled data
-    plt.scatter(X_pca[len(Y):, 0], X_pca[len(Y):, 1], c=encoded_predicted_labels, cmap=plt.cm.Paired, edgecolor='k', s=20)
-    plt.title('Predicted SelfLearning Labels for Unlabeled Data')
-    plt.xlabel('Principal Component 1')
-    plt.ylabel('Principal Component 2')
+# Plot the KNN classification results using PCA for visualization
 
 
-    plt.tight_layout()
-    plt.show()
-    
-SelfLearning(labeled_data, unlabeled_data)
+pca = PCA(n_components=2)
+X_pca = pca.fit_transform(np.vstack((Y, X)))
+complete_data_data_pca = pca.transform(complete_data_data)
+
+# Encode labels as colors
+
+label_encoder = LabelEncoder()
+encoded_labels = label_encoder.fit_transform(labels)
+encoded_predicted_labels = label_encoder.transform(predicted_labels)
+
+# Plot the combined labels in the same figure
+plt.figure(figsize=(10, 10))
+
+# Plot the predicted labels for the unlabeled data
+plt.scatter(X_pca[len(Y):, 0], X_pca[len(Y):, 1], c=encoded_predicted_labels, cmap=plt.cm.Paired, edgecolor='k', s=20)
+plt.title('Predicted SelfLearning Data')
+plt.xlabel('Principal Component 1')
+plt.ylabel('Principal Component 2')
+
+
+plt.tight_layout()
+plt.show()
