@@ -7,6 +7,8 @@ from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 from sklearn.metrics import davies_bouldin_score, normalized_mutual_info_score
 from sklearn.metrics import silhouette_score, adjusted_rand_score, calinski_harabasz_score
+import time
+from matplotlib.backends.backend_pdf import PdfPages
 
 def GetNewestDataFileNamer(x):
     #Check for env variable - error if not present
@@ -45,7 +47,7 @@ dataLabeled = labeledData.iloc[:,2:]
 X = StandardScaler().fit_transform(dataLabeled)
 
 fig, axs = plt.subplots(3, 2, figsize=(15, 15))
-fig.suptitle('GaussianMixture Metrics for PCA with different components', size=18)
+fig.suptitle('BIRCH Metrics for different K clusters', size=18)
 
 # Initialize a dictionary to store the scores for each metric
 scores = {
@@ -56,24 +58,24 @@ scores = {
     'Adjusted Rand Index': []
 }
 
-components = list(range(1, 21))
+clusters = list(range(2, 21))
 
-for idx, n_components in enumerate(components):
-    # Apply PCA to reduce the dimensionality of the data
-    pca = PCA(n_components=n_components).fit(dataLabeled)
-    X = pca.transform(dataLabeled)
+# Reduce the dimension to 10 using PCA
+pca = PCA(n_components=10)
+X_pca = pca.fit_transform(X)
 
-    # Create a Gaussian Mixture model
-    Gaussian = GaussianMixture(n_components=5, covariance_type="full", random_state=42)
-    Gaussian.fit(X)
+for idx, n_clusters in enumerate(clusters):
+    Gaussian = GaussianMixture(n_components=n_clusters)
+    Gaussian.fit(X_pca)
+    start_time = time.time()
 
     # Predict the labels for the data
-    y_pred = Gaussian.predict(X)
-
+    y_pred = Gaussian.predict(X_pca)
+    
     # Compute the silhouette score
-    sil_score = silhouette_score(X, y_pred)
-    ch_score = calinski_harabasz_score(X, y_pred)
-    db_score = davies_bouldin_score(X, y_pred)
+    sil_score = silhouette_score(X_pca, y_pred)
+    ch_score = calinski_harabasz_score(X_pca, y_pred)
+    db_score = davies_bouldin_score(X_pca, y_pred)
     nmi_score = normalized_mutual_info_score(labels, y_pred)
     ari_score = adjusted_rand_score(labels, y_pred)
 
@@ -84,27 +86,29 @@ for idx, n_components in enumerate(components):
     scores['Normalized Mutual Information Score'].append(nmi_score)
     scores['Adjusted Rand Index'].append(ari_score)
 
+    end_time = time.time()
+    print(f'Time taken for {n_clusters} clusters: {end_time - start_time:.2f} seconds')
+
+
 # Plot each metric score in a subplot
 for i, (metric, score_list) in enumerate(scores.items()):
     ax = axs[i // 2, i % 2]
-    ax.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
-    ax.set_xticks(components)
-    ax.plot(components, score_list, marker='o', linestyle='-')
+    ax.plot(clusters, score_list, marker='o', linestyle='-')
     ax.set_title(metric)
     ax.set_ylabel('Score')
-
-# Remove the empty subplot
-fig.delaxes(axs[2, 1])
+    ax.set_xticks(clusters)
 
 plt.tight_layout(rect=[0, 0, 1, 0.96])
 plt.show()
 
-
-# # Plot the clustered data
-# plt.figure(figsize=(6, 6))
-# plt.title("GaussianMixture", size=18)
-# plt.scatter(X[:, 0], X[:, 1], c=y_pred, s=10, cmap='viridis')
-# plt.xlabel("Feature 1")
-# plt.ylabel("Feature 2")
-# plt.show()
-
+# Create a PdfPages object to save the plots
+with PdfPages('GaussianMixture_Metrics_Subplots.pdf') as pdf:
+    for i, (metric, score_list) in enumerate(scores.items()):
+        fig, ax = plt.subplots()
+        ax.plot(clusters, score_list, marker='o', linestyle='-')
+        ax.set_title(metric)
+        ax.set_ylabel('Score')
+        ax.set_xticks(clusters)
+        ax.set_xlabel('Number of Clusters')
+        pdf.savefig(fig)  # Save the current figure into the pdf
+        plt.close(fig)  # Close the figure to free memory

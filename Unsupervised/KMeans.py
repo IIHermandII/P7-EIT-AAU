@@ -5,9 +5,10 @@ from sklearn.preprocessing import StandardScaler
 import pandas as pd
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
-from sklearn.metrics import accuracy_score
 from sklearn.metrics import silhouette_score, adjusted_rand_score
 from sklearn.metrics import davies_bouldin_score, normalized_mutual_info_score, calinski_harabasz_score
+import time
+from matplotlib.backends.backend_pdf import PdfPages
 
 
 def GetNewestDataFileNamer(x):
@@ -46,45 +47,75 @@ dataLabeled = labeledData.iloc[:,2:]
 # Scale the data to have 0 mean and variance 1 - recommended step by sklearn
 X = StandardScaler().fit_transform(dataLabeled)
 
-for n_components in [2, 5, 10, 20]:
-    # Apply PCA to reduce the dimensionality of the data
-    pca = PCA(n_components=n_components).fit(dataLabeled)
-    X_pca = pca.transform(dataLabeled)
+fig, axs = plt.subplots(3, 2, figsize=(15, 15))
+fig.suptitle('KMeans Metrics for different K clusters', size=14)
 
-    # Create a KMeans model
-    kmeans = cluster.KMeans(n_clusters=5, random_state=0)
-    kmeans.fit(X_pca)
+# Initialize a dictionary to store the scores for each metric
+scores = {
+    'Silhouette Score': [],
+    'Calinski-Harabasz Score': [],
+    'Davies-Bouldin Score': [],
+    'Normalized Mutual Information Score': [],
+    'Adjusted Rand Index': []
+}
+
+clusters = list(range(2, 21))
+
+# Reduce the dimension to 10 using PCA
+pca = PCA(n_components=10)
+X_pca = pca.fit_transform(X)
+
+for idx, n_clusters in enumerate(clusters):
+    start_time = time.time()
+    Kmeans = cluster.KMeans(n_clusters=n_clusters)
+    Kmeans.fit(X_pca)
 
     # Predict the labels for the data
-    y_pred = kmeans.predict(X_pca)
-
+    y_pred = Kmeans.predict(X_pca)
+    
     # Compute the silhouette score
     sil_score = silhouette_score(X_pca, y_pred)
-    print(f'Silhouette Score with PCA={n_components}: {sil_score}')
-
-    # Compute the Calinski-Harabasz score
     ch_score = calinski_harabasz_score(X_pca, y_pred)
-    print(f'Calinski-Harabasz Score with PCA={n_components}: {ch_score}')
-
-    # Compute the Davies-Bouldin score
     db_score = davies_bouldin_score(X_pca, y_pred)
-    print(f'Davies-Bouldin Score with PCA={n_components}: {db_score}')
-
-    # Compute the Normalized Mutual Information score
     nmi_score = normalized_mutual_info_score(labels, y_pred)
-    print(f'Normalized Mutual Information Score with PCA={n_components}: {nmi_score}')
-
-    # Compute the Adjusted Rand Index
     ari_score = adjusted_rand_score(labels, y_pred)
-    print(f'Adjusted Rand Index with PCA={n_components}: {ari_score}')
-    print("\n")
 
+    # print(f'\nPCA with {n_components} components:')
+    # print(f'Silhouette Score: {sil_score}')
+    # print(f'Calinski-Harabasz Score: {ch_score}')
+    # print(f'Davies-Bouldin Score: {db_score}')
+    # print(f'Normalized Mutual Information Score: {nmi_score}')
+    # print(f'Adjusted Rand Index: {ari_score}')
 
+    # Store the scores in the dictionary
+    scores['Silhouette Score'].append(sil_score)
+    scores['Calinski-Harabasz Score'].append(ch_score)
+    scores['Davies-Bouldin Score'].append(db_score)
+    scores['Normalized Mutual Information Score'].append(nmi_score)
+    scores['Adjusted Rand Index'].append(ari_score)
 
-# # Plot the clustered data
-# plt.figure(figsize=(6, 6))
-# plt.title("KMeans", size=18)
-# plt.scatter(X[:, 0], X[:, 1], c=y_pred, s=10, cmap='viridis')
-# plt.xlabel("Feature 1")
-# plt.ylabel("Feature 2")
-# plt.show()
+    end_time = time.time()
+    print(f'Time taken for {n_clusters} clusters: {end_time - start_time:.2f} seconds')
+
+# Plot each metric score in a subplot
+for i, (metric, score_list) in enumerate(scores.items()):
+    ax = axs[i // 2, i % 2]
+    ax.plot(clusters, score_list, marker='o', linestyle='-')
+    ax.set_title(metric)
+    ax.set_ylabel('Score')
+    ax.set_xticks(clusters)
+
+plt.tight_layout(rect=[0, 0, 1, 0.96])
+plt.show()
+# Create a PdfPages object to save the plots
+with PdfPages('KMeans_Metrics_Subplots.pdf') as pdf:
+    for i, (metric, score_list) in enumerate(scores.items()):
+        fig, ax = plt.subplots()
+        ax.plot(clusters, score_list, marker='o', linestyle='-')
+        ax.set_title(metric)
+        ax.set_ylabel('Score')
+        ax.set_xticks(clusters)
+        ax.set_xlabel('Number of Clusters')
+        pdf.savefig(fig)  # Save the current figure into the pdf
+        plt.close(fig)  # Close the figure to free memory
+

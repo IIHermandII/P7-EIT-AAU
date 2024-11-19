@@ -1,4 +1,3 @@
-import numpy as np
 import os
 import re
 from sklearn import cluster
@@ -8,6 +7,8 @@ from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 from sklearn.metrics import silhouette_score, adjusted_rand_score
 from sklearn.metrics import davies_bouldin_score, normalized_mutual_info_score, calinski_harabasz_score
+import time
+from matplotlib.backends.backend_pdf import PdfPages
 
 
 def GetNewestDataFileNamer(x):
@@ -47,7 +48,7 @@ dataLabeled = labeledData.iloc[:,2:]
 X = StandardScaler().fit_transform(dataLabeled)
 
 fig, axs = plt.subplots(3, 2, figsize=(15, 15))
-fig.suptitle('BIRCH Metrics for PCA with different components', size=18)
+fig.suptitle('BIRCH Metrics for different K clusters', size=18)
 
 # Initialize a dictionary to store the scores for each metric
 scores = {
@@ -58,25 +59,24 @@ scores = {
     'Adjusted Rand Index': []
 }
 
-components = list(range(1, 21))
+clusters = list(range(2, 21))
 
-for idx, n_components in enumerate(components):
-    # Apply PCA to reduce the dimensionality of the data
-    pca = PCA(n_components=n_components).fit(dataLabeled)
-    X = pca.transform(dataLabeled)
+# Reduce the dimension to 10 using PCA
+pca = PCA(n_components=10)
+X_pca = pca.fit_transform(X)
 
-    Birch = cluster.Birch(n_clusters=5)
-    Birch.fit(X)
+for idx, n_clusters in enumerate(clusters):
+    Birch = cluster.Birch(n_clusters=n_clusters)
+    Birch.fit(X_pca)
+    start_time = time.time()
 
     # Predict the labels for the data
-    y_pred = Birch.predict(X)
-
-    print(f'\nPCA with {n_components} components:')
+    y_pred = Birch.predict(X_pca)
     
     # Compute the silhouette score
-    sil_score = silhouette_score(X, y_pred)
-    ch_score = calinski_harabasz_score(X, y_pred)
-    db_score = davies_bouldin_score(X, y_pred)
+    sil_score = silhouette_score(X_pca, y_pred)
+    ch_score = calinski_harabasz_score(X_pca, y_pred)
+    db_score = davies_bouldin_score(X_pca, y_pred)
     nmi_score = normalized_mutual_info_score(labels, y_pred)
     ari_score = adjusted_rand_score(labels, y_pred)
 
@@ -86,7 +86,6 @@ for idx, n_components in enumerate(components):
     # print(f'Davies-Bouldin Score: {db_score}')
     # print(f'Normalized Mutual Information Score: {nmi_score}')
     # print(f'Adjusted Rand Index: {ari_score}')
-    
 
     # Store the scores in the dictionary
     scores['Silhouette Score'].append(sil_score)
@@ -95,14 +94,29 @@ for idx, n_components in enumerate(components):
     scores['Normalized Mutual Information Score'].append(nmi_score)
     scores['Adjusted Rand Index'].append(ari_score)
 
+    end_time = time.time()
+    print(f'Time taken for {n_clusters} clusters: {end_time - start_time:.2f} seconds')
+
 # Plot each metric score in a subplot
 for i, (metric, score_list) in enumerate(scores.items()):
     ax = axs[i // 2, i % 2]
-    ax.plot(components, score_list, marker='o', linestyle='-')
+    ax.plot(clusters, score_list, marker='o', linestyle='-')
     ax.set_title(metric)
-    # ax.set_xlabel('Number of PCA Components')
     ax.set_ylabel('Score')
+    ax.set_xticks(clusters)
 
 plt.tight_layout(rect=[0, 0, 1, 0.96])
 plt.show()
+
+# Create a PdfPages object to save the plots
+with PdfPages('BIRCH_Metrics_Subplots.pdf') as pdf:
+    for i, (metric, score_list) in enumerate(scores.items()):
+        fig, ax = plt.subplots()
+        ax.plot(clusters, score_list, marker='o', linestyle='-')
+        ax.set_title(metric)
+        ax.set_ylabel('Score')
+        ax.set_xticks(clusters)
+        ax.set_xlabel('Number of Clusters')
+        pdf.savefig(fig)  # Save the current figure into the pdf
+        plt.close(fig)  # Close the figure to free memory
 
