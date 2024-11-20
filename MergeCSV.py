@@ -50,7 +50,7 @@ def main():
 
     #Add the two datasets (our+self labelled)
     total_df = pd.concat([our_df, merged_df], ignore_index=True)
-    outputPath = envP7RootDir + "\\Data\\Total data file.csv"
+    outputPath = envP7RootDir + "\\Data\\Total datasets\\Total data file (SVM+Confidence).csv"
     total_df.to_csv(outputPath, index=False)
 
 if __name__ == "__main__":

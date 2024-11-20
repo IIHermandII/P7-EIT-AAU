@@ -6,6 +6,7 @@ import pandas as pd
 import datetime
 import scipy.stats
 from tqdm import trange
+import warnings
 
 def OprationExplanation():
     print("\n\n\n-------------- Labelled data to CSV file --------------")
@@ -21,7 +22,7 @@ def GetDataFiles():
         print("---> If you are working in vscode\n---> you need to restart the aplication\n---> After you have made a env\n---> for vscode to see it!!")
         print("---> You need to make a env called 'P7RootDir' containing the path to P7 root dir")
         raise ValueError('Environment variable not found (!env)')
-    workDir = envP7RootDir + "\\Data\\Label clips"
+    workDir = envP7RootDir + "\\Data\\Label clips 500Hz"
     DataList = []
     ListOfLabels = []
 
@@ -52,7 +53,7 @@ def FeatureExtraction(WovFile):
     features['MFCC_Var'] = np.var(mfccs, axis=1).mean()  # Variance of MFCCs
 
     # Contrast Features
-    spectral_contrast = librosa.feature.spectral_contrast(y=y, sr=sr)
+    spectral_contrast = librosa.feature.spectral_contrast(y=y, sr=sr,n_bands=1)
     features['Spectral_Contrast_Mean'] = np.mean(spectral_contrast, axis=1).mean()
     features['Spectral_Contrast_Var'] = np.var(spectral_contrast, axis=1).mean()
 
@@ -123,6 +124,7 @@ def MakeCSV(DataList, envP7RootDir):
     print('CSV saved under the name: ' + currentTime + '_audio_features_with_labels.csv' )
 
 def main():
+    warnings.filterwarnings("ignore")
     OprationExplanation()
     DataList, envP7RootDir = GetDataFiles()
     MakeCSV(DataList, envP7RootDir)

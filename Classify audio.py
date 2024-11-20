@@ -90,7 +90,7 @@ def FeatureExtraction(y, sr, track):
     
     return features_df, features
 
-def mute_segments(y, sr, model, track, WL=0.2, OL=0.75):
+def mute_segments(y, sr, model, track, WL=0.2, OL=0.5):
     #WL and HL is in sec - then convert to samples
     WL_samples = int(WL * sr)
     HL_samples = int(WL_samples * (1-OL))
@@ -98,6 +98,7 @@ def mute_segments(y, sr, model, track, WL=0.2, OL=0.75):
     # Classify each segment and mute if labeled as 'breathing'
     muted_audio = np.copy(y)
 
+    count = 0
     prediction_list = []
     all_features = []
     #Loop through all start samples of windows in the audio track
@@ -109,13 +110,19 @@ def mute_segments(y, sr, model, track, WL=0.2, OL=0.75):
         #Extract all features
         features_df, features = FeatureExtraction(window, sr, track)
         #Select the features the model is trained on
-        selectedFeatures = features_df[model[1].get_feature_names_out()]
+        selectedFeatures = features_df.drop(['Filename','Label'], axis=1)
         #Run prediction on the selected samples
         prediction = model.predict(selectedFeatures)
-        #features['Label'] = prediction[0]
+        #confidence = model.predict_proba(selectedFeatures)
+        #Only keep good samples in new train set
+        # if(0.9 < max(confidence[0])):
+        #     features['Label'] = prediction[0]
+        #     all_features.append(features)
+        # else:
+        #     count = count + 1
 
-        #all_features.append(features)
-        prediction_list.append(str(prediction + "| Start:" + str(start_sample) + " Stop:" + str(end_sample)))
+        #prediction_list.append(str(prediction + "| Start:" + str(start_sample) + " Stop:" + str(end_sample)))
+        prediction_list.append(str(start_sample/sr) + "\t" + str(end_sample/sr) + "\t" + str(prediction[0]))
 
         #Remove audio if the audio is not voice
         if prediction[0] == 'BI' or prediction[0] == 'BO' or prediction[0] == 'M':
@@ -126,22 +133,25 @@ def mute_segments(y, sr, model, track, WL=0.2, OL=0.75):
     #             ['MFCC_Var', 'Spectral_Contrast_Mean', 'Spectral_Contrast_Var', 'SFM', 'Spectral_Spread', 'Spectral_Skewness', 'Spectral_Centroid', 'Chroma_Mean', 'Chroma_Var', 'ZCR', 'STE', 'RMS']
     # features_df = features_df[column_order]
 
+    # print("Samples removed: ", count)
+
     return muted_audio, prediction_list, features_df
 
 def main():
     warnings.filterwarnings("ignore")
     envP7RootDir = os.getenv("P7RootDir")
     #Type name of track to be processed
-    track = "4.wav"
+    track = "2"
 
     #Uncomment for loop and indent from "Indent start" to "Indent end" for data file generation
-    #for i in range(9,23):
-    #Indent start - 
-    #    track = str(i)
-    y, sr = GetDataFiles(track)
+    # for i in range(9,23):
+        #Indent start - 
+        
+        # track = str(i)
+    y, sr = GetDataFiles(track + ".wav")
 
     # Load the model from disk
-    pipe = joblib.load('Models\\LR_model_trainset.sav')
+    pipe = joblib.load('Models\\SVM_model_trainset.sav')
 
     print("Model loaded")
 
@@ -149,25 +159,25 @@ def main():
     newAudio, predictions, all_features = mute_segments(y,sr,pipe,track)
 
     print("Audio processed")
-   
+
     #CSVname = envP7RootDir + "\\Data\\CSV files self\\" + track + ".csv"
     #all_features.to_csv(CSVname, index=False)
 
-    #Indent end
+        #Indent end
 
     #print("Model self labelled data output")
 
     #Export predictions document (Pred | start samp | end samp)
-    # f = open("Models\\Predictions (LR).txt", "w")
-    # for pred in predictions:
-    #     f.write(pred + "\n")
-    # f.close()
+    f = open("Outputs\\Predictions " + track +" (SVM).txt", "w")
+    for pred in predictions:
+        f.write(pred + "\n")
+    f.close()
 
     print("Predictions data output")
 
     # Save the modified audio to a new file
-    output_path = envP7RootDir + "\\Data\\Processed audio\\" + track + " (processed).wav"
-    sf.write(output_path, newAudio, sr)
+    #output_path = envP7RootDir + "\\Data\\Processed audio\\" + track + " (processed).wav"
+    #sf.write(output_path, newAudio, sr)
 
     print("Processed audio output \nSCRIPT DONE")
 
