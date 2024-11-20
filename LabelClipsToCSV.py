@@ -21,7 +21,17 @@ def GetDataFiles():
         print("---> If you are working in vscode\n---> you need to restart the aplication\n---> After you have made a env\n---> for vscode to see it!!")
         print("---> You need to make a env called 'P7RootDir' containing the path to P7 root dir")
         raise ValueError('Environment variable not found (!env)')
-    workDir = envP7RootDir + "\\Data\\Label clips"
+    
+    selectClips = "Female"
+
+    match selectClips:
+        case "Male":
+            workDir = envP7RootDir + "\\Data\\Label clips male"
+        case "Female":
+            workDir = envP7RootDir + "\\Data\\Label clips female"
+        case "def":    
+            workDir = envP7RootDir + "\\Data\\Label clips"
+    
     DataList = []
     ListOfLabels = []
 
@@ -115,7 +125,7 @@ def MakeCSV(DataList, envP7RootDir):
     features_df = features_df[column_order]
     workDir = envP7RootDir + "\\Data\\CSV files"
     currentTime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    CSVFileName = workDir + '\\' +currentTime+'_audio_features_with_labels.csv'
+    CSVFileName = workDir + '\\' +currentTime+'_audio_features_with_labels(female).csv'
     features_df.to_csv(CSVFileName, index=False)
     
     print('CSV file created and saved to:')
