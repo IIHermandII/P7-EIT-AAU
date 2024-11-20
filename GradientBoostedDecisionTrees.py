@@ -60,11 +60,13 @@ def main():
     print("Data loaded")
     print("Training model may take several minutes depending on selected\nNO PROGRESS BE PATIENT :)")
     model = GradientBoostingClassifier(verbose=1,n_estimators=50,tol=0.01,max_depth=5)
-    # model = HistGradientBoostingClassifier()
+
     # pipe = Pipeline([('Scale data',StandardScaler()),
     #                 ('Feature selection',RFECV(estimator=model,cv = StratifiedKFold(5),n_jobs=-1,step=1)),
     #                 ('Classification',model)])
     
+    # Features: [LPC2, MFCC2, MFCC7, MFCC11, Spectral_Constrast_Mean, Spectral_Constrast_Var, Chroma_mean, STE, RMS]
+
     pipe = Pipeline([('Scale data',StandardScaler()),
                     ('Feature selection',RFE(estimator=model, n_features_to_select=9)),
                     ('Classification',model)])
