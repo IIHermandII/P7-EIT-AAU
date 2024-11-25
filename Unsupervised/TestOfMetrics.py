@@ -1,10 +1,8 @@
 import os
 import re
-from sklearn.mixture import GaussianMixture
 from sklearn.preprocessing import StandardScaler
 import pandas as pd
 from sklearn.decomposition import PCA
-import matplotlib.pyplot as plt
 from sklearn.metrics import davies_bouldin_score
 from sklearn.metrics import silhouette_score, calinski_harabasz_score
 from sklearn.preprocessing import LabelEncoder

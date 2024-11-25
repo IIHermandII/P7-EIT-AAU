@@ -37,7 +37,7 @@ def GetNewestDataFileNamer(x):
     dirDates = sorted(dirDates,key=lambda l:l[1],reverse=True) # Take oldest data first i belive 
     return(workDir + "\\" + dirDates[0][1])
 
-labeledData = pd.read_csv(GetNewestDataFileNamer('labeled'))
+labeledData = pd.read_csv(GetNewestDataFileNamer('unlabeled'))
 
 labels = labeledData.iloc[:, 1]
 dataLabeled = labeledData.iloc[:,2:]
@@ -58,7 +58,8 @@ scores = {
     'Adjusted Rand Index': []
 }
 
-clusters = list(range(2, 21))
+# clusters = list(range(2, 21))
+clusters = [5]
 
 # Reduce the dimension to 10 using PCA
 pca = PCA(n_components=10)
@@ -91,26 +92,34 @@ for idx, n_clusters in enumerate(clusters):
     print(f'Time taken for {n_clusters} clusters: {end_time - start_time:.2f} seconds')
 
 # Plot each metric score in a subplot
-for i, (metric, score_list) in enumerate(scores.items()):
-    ax = axs[i // 2, i % 2]
-    ax.plot(clusters, score_list, marker='o', linestyle='-')
-    ax.set_title(metric)
-    ax.set_ylabel('Score')
-    ax.set_xticks(clusters)
+# for i, (metric, score_list) in enumerate(scores.items()):
+#     ax = axs[i // 2, i % 2]
+#     ax.plot(clusters, score_list, marker='o', linestyle='-')
+#     ax.set_title(metric)
+#     ax.set_ylabel('Score')
+#     ax.set_xticks(clusters)
 
-plt.tight_layout(rect=[0, 0, 1, 0.96])
-plt.show()
+# plt.tight_layout(rect=[0, 0, 1, 0.96])
+# plt.show()
 
 # Create a PdfPages object to save the plots
-with PdfPages('Spectral_Metrics_Subplots.pdf') as pdf:
-    for i, (metric, score_list) in enumerate(scores.items()):
-        fig, ax = plt.subplots()
-        ax.plot(clusters, score_list, marker='o', linestyle='-')
-        ax.set_title(metric)
-        ax.set_ylabel('Score')
-        ax.set_xticks(clusters)
-        ax.set_xlabel('Number of Clusters')
-        pdf.savefig(fig)  # Save the current figure into the pdf
-        plt.close(fig)  # Close the figure to free memory
+with PdfPages('SpectralAllData.pdf') as pdf:
+    # for i, (metric, score_list) in enumerate(scores.items()):
+    #     fig, ax = plt.subplots()
+    #     ax.plot(clusters, score_list, marker='o', linestyle='-')
+    #     ax.set_title(metric, size = 24)
+    #     ax.set_ylabel('Score', size = 20)
+    #     ax.set_xticks(clusters)
+    #     ax.set_xlabel('Number of Clusters', size = 20)
+    #     pdf.savefig(fig)  # Save the current figure into the pdf
+    #     plt.close(fig)  # Close the figure to free memory
 
+    # Save the scatter plot with cluster centers
+    fig, ax = plt.subplots(figsize=(10, 8))
+    ax.scatter(X_pca[:, 0], X_pca[:, 1], c=y_pred, cmap='viridis', marker='o', edgecolor='k')
+    ax.set_title(f'Spectral Clustering', size = 24)
+    ax.set_xlabel('Principal Component 1', size = 20)
+    ax.set_ylabel('Principal Component 2', size = 20)
+    pdf.savefig(fig)  # Save the scatter plot into the pdf
+    plt.close(fig)  # Close the figure to free memory
 
