@@ -112,9 +112,9 @@ class Net(nn.Module):
 
 
 class NeuralNetwork(pl.LightningModule):
-    def __init__(self, model, n_classes, train_loader, test_loader):
+    def __init__(self, model, n_classes, train_loader, test_loader, learning_rate = 5e-4):
         super().__init__()
-        self.learning_rate = 5e-4
+        self.learning_rate = learning_rate
         self.model = model
         self.train_loader = train_loader
         self.test_loader = test_loader
@@ -130,6 +130,7 @@ class NeuralNetwork(pl.LightningModule):
         x, y = batch
         y_hat = self.forward(x)
         loss = func.cross_entropy(y_hat, y)
+        # loss.backward()
         self.log("train_loss", loss, prog_bar=True) # Expected value of first trainloss is np.log(n_classes) = np.log(5) = 1.609
         return loss
 
@@ -171,7 +172,13 @@ def eval_acc(model, device, dataloader, debug_name=None):
 def main():
     train_loader, test_loader, classes = pytorchPackageData(GetNewestDataFileName())
     # device = torch.device('cpu')
-    device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
+    # device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+
+    if torch.cuda.is_available():
+        device = torch.device('cuda:1' if torch.cuda.get_device_name('cuda:1') == 'NVIDIA GeForce GTX 1070' else 'cuda:0')
+    else:
+        device = torch.device('cpu')
+
     print(torch.cuda.get_device_name(device=device))
 
     n_classes = len(classes)
