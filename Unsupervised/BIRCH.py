@@ -40,7 +40,7 @@ def GetNewestDataFileNamer(x):
     print(workDir + "\\" + dirDates[0][1])
     return(workDir + "\\" + dirDates[0][1])
 
-labeledData = pd.read_csv(GetNewestDataFileNamer('labeled'))
+labeledData = pd.read_csv(GetNewestDataFileNamer('unlabeled'))
 
 labels = labeledData.iloc[:, 1]
 dataLabeled = labeledData.iloc[:,2:]

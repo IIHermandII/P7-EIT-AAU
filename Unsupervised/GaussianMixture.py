@@ -37,7 +37,7 @@ def GetNewestDataFileNamer(x):
     dirDates = sorted(dirDates,key=lambda l:l[1],reverse=True) # Take oldest data first i belive 
     return(workDir + "\\" + dirDates[0][1])
 
-labeledData = pd.read_csv(GetNewestDataFileNamer('labeled'))
+labeledData = pd.read_csv(GetNewestDataFileNamer('unlabeled'))
 
 labels = labeledData.iloc[:, 1]
 dataLabeled = labeledData.iloc[:,2:]
