@@ -161,7 +161,6 @@ def plotData3D(dataFile):
         ax.scatter3D(data_S[index,0], data_S[index,5], data_S[index,24], s=6)
     plt.legend(list)
     plt.title("Selected features")
-    
 
 def screePlot(dataFile):
     #Read CSV file
@@ -289,10 +288,12 @@ def main():
    #NewestDataFileName = GetNewestDataFileName() 
    NewestDataFileName = "Datasets\\OurData.csv"
    print(NewestDataFileName)
-   plotData2D(NewestDataFileName)
-   plotData3D(NewestDataFileName)
+#    plotData2D(NewestDataFileName)
+#    plotData3D(NewestDataFileName)
+   PredictedDataFileName = "C:\\Users\\emill\OneDrive - Aalborg Universitet\\P7\\Data\\CSV files self\\2.csv"
+   plotData3D(PredictedDataFileName)
    #Nicoletta("Datasets\\Old student training_final.csv")
-   #biplot(NewestDataFileName)
+   #biplot(NewestDataFileName) #
    screePlot(NewestDataFileName)
    plt.show()
 

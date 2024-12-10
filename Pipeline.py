@@ -82,11 +82,11 @@ def main():
     warnings.filterwarnings("ignore")
     
     #Use these variables to select trainset and models
-    selectRFE = False
+    selectRFE = True
     modelName = "SVM"
     model = selectModel(modelName)
 
-    datasetName = "Trainset"
+    datasetName = "Expanded"
     dataFile = selectDataset(datasetName)
 
     print("Selected data file: ", dataFile)
@@ -104,7 +104,7 @@ def main():
         
     if selectRFE:
         pipe = Pipeline([('Scale data',StandardScaler()),
-                        ('Feature selection',RFE(estimator=model,n_features_to_select=3))])
+                        ('Feature selection',RFE(estimator=model,n_features_to_select=10))])
         # pipe = Pipeline([('Scale data',StandardScaler()),
         #                  ('PCA',PCA(n_components=6)),
         #                  ('Model',model)])
@@ -185,7 +185,7 @@ def main():
     print("Confusion matrix created")
 
     # Save the model to disk
-    #joblib.dump(pipe, "Models\\" + modelName + "_model_trainset.sav")
+    joblib.dump(pipe, "Models\\" + modelName + "_model_trainset.sav")
 
     plt.show()
     print("Model saved \nSCRIPT DONE")

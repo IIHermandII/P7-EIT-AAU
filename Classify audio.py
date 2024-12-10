@@ -6,7 +6,6 @@ import scipy.stats
 import joblib
 import pandas as pd
 from tqdm import tqdm,trange
-
 import warnings
 
 def GetDataFiles(fileNo):
@@ -90,16 +89,18 @@ def FeatureExtraction(y, sr, track):
     
     return features_df, features
 
-def mute_segments(y, sr, model, track, WL=0.2, OL=0.5):
+def mute_segments(y, sr, model, track, WL=0.1, OL=0.5): # sr = 1 sec = 44100
     #WL and HL is in sec - then convert to samples
-    WL_samples = int(WL * sr)
-    HL_samples = int(WL_samples * (1-OL))
+    WL_samples = int(WL * sr)   # window length * sample rate
+        # hop length, OL = over lap
 
     # Classify each segment and mute if labeled as 'breathing'
     muted_audio = np.copy(y)
 
     count = 0
+    prediction_list_90 = []
     prediction_list = []
+    conf = []
     all_features = []
     #Loop through all start samples of windows in the audio track
     for start_sample in tqdm(range(0, len(y), HL_samples)):
@@ -113,29 +114,38 @@ def mute_segments(y, sr, model, track, WL=0.2, OL=0.5):
         selectedFeatures = features_df.drop(['Filename','Label'], axis=1)
         #Run prediction on the selected samples
         prediction = model.predict(selectedFeatures)
-        #confidence = model.predict_proba(selectedFeatures)
-        #Only keep good samples in new train set
-        # if(0.9 < max(confidence[0])):
-        #     features['Label'] = prediction[0]
-        #     all_features.append(features)
-        # else:
-        #     count = count + 1
+        
+        ##
+        confidence = model.predict_proba(selectedFeatures) # [.1,2.,.4,.6..]
 
-        #prediction_list.append(str(prediction + "| Start:" + str(start_sample) + " Stop:" + str(end_sample)))
+        formatted_confidence  = [np.format_float_positional(c, precision=4, unique=False, fractional=True) for c in confidence[0]]
+        conf.append(prediction[0] + "\t|\t" + str(formatted_confidence))
+        #print(prediction[0] + "\t|\t" + str(formatted_confidence ))
+
+        #Only keep good samples in new train set
+        if(0.9 < max(confidence[0])):
+            features['Label'] = prediction[0]
+            all_features.append(features)
+            prediction_list_90.append(str(start_sample/sr) + "\t" + str(end_sample/sr) + "\t" + str(prediction[0]))
+        else:
+            count = count + 1 # to see how many unsertant predictions the model make
         prediction_list.append(str(start_sample/sr) + "\t" + str(end_sample/sr) + "\t" + str(prediction[0]))
+        
+        
 
         #Remove audio if the audio is not voice
         if prediction[0] == 'BI' or prediction[0] == 'BO' or prediction[0] == 'M':
             muted_audio[start_sample:end_sample] = 0.25*muted_audio[start_sample:end_sample]  # Mute this segment
 
-    # features_df = pd.DataFrame(all_features)
-    # column_order = ['Filename', 'Label'] + [f'LPC{i + 2}' for i in range(5)] +  [f'MFCC{i + 1}' for i in range(13)] + \
-    #             ['MFCC_Var', 'Spectral_Contrast_Mean', 'Spectral_Contrast_Var', 'SFM', 'Spectral_Spread', 'Spectral_Skewness', 'Spectral_Centroid', 'Chroma_Mean', 'Chroma_Var', 'ZCR', 'STE', 'RMS']
-    # features_df = features_df[column_order]
+    #Makes new data file only containgng the good predictions
+    features_df = pd.DataFrame(all_features)
+    column_order = ['Filename', 'Label'] + [f'LPC{i + 2}' for i in range(5)] +  [f'MFCC{i + 1}' for i in range(13)] + \
+                ['MFCC_Var', 'Spectral_Contrast_Mean', 'Spectral_Contrast_Var', 'SFM', 'Spectral_Spread', 'Spectral_Skewness', 'Spectral_Centroid', 'Chroma_Mean', 'Chroma_Var', 'ZCR', 'STE', 'RMS']
+    features_df = features_df[column_order]
 
-    # print("Samples removed: ", count)
+    print("Samples removed: ", count)
 
-    return muted_audio, prediction_list, features_df
+    return muted_audio, prediction_list_90,prediction_list, conf, features_df
 
 def main():
     warnings.filterwarnings("ignore")
@@ -156,21 +166,33 @@ def main():
     print("Model loaded")
 
     #Process audio - 12dB attenuation to BI, BO, M segments
-    newAudio, predictions, all_features = mute_segments(y,sr,pipe,track)
+    
+    newAudio, predictions_90, predictions,confidances , all_features = mute_segments(y,sr,pipe,track)
 
     print("Audio processed")
 
-    #CSVname = envP7RootDir + "\\Data\\CSV files self\\" + track + ".csv"
-    #all_features.to_csv(CSVname, index=False)
+    ##
+    CSVname = envP7RootDir + "\\Data\\CSV files self\\" + track + ".csv"
+    all_features.to_csv(CSVname, index=False)
 
         #Indent end
 
     #print("Model self labelled data output")
 
     #Export predictions document (Pred | start samp | end samp)
-    f = open("Outputs\\Predictions " + track +" (SVM).txt", "w")
+    f = open("Outputs\\Predictions " + track +" (SVM)_.txt", "w")
     for pred in predictions:
         f.write(pred + "\n")
+    f.close()
+
+    f = open("Outputs\\Predictions_90 " + track +" (SVM)_.txt", "w")
+    for pred in predictions_90:
+        f.write(pred + "\n")
+    f.close()
+
+    f = open("Outputs\\Conf " + track +" (SVM)_.txt", "w")
+    for conf in confidances:
+        f.write(conf + "\n")
     f.close()
 
     print("Predictions data output")
