@@ -37,7 +37,7 @@ def GetNewestDataFileNamer(x):
     dirDates = sorted(dirDates,key=lambda l:l[1],reverse=True) # Take oldest data first i belive 
     return(workDir + "\\" + dirDates[0][1])
 
-labeledData = pd.read_csv(GetNewestDataFileNamer('unlabeled'))
+labeledData = pd.read_csv(GetNewestDataFileNamer('labeled'))
 
 labels = labeledData.iloc[:, 1]
 dataLabeled = labeledData.iloc[:,2:]
@@ -91,6 +91,9 @@ for idx, n_clusters in enumerate(clusters):
     end_time = time.time()
     print(f'Time taken for {n_clusters} clusters: {end_time - start_time:.2f} seconds')
 
+    print(f'Adjusted Rand Index for {n_clusters} clusters: {ari_score}')
+    print(f'Normalized Mutual Information Score for {n_clusters} clusters: {nmi_score}')
+
 # Plot each metric score in a subplot
 # for i, (metric, score_list) in enumerate(scores.items()):
 #     ax = axs[i // 2, i % 2]
@@ -103,7 +106,7 @@ for idx, n_clusters in enumerate(clusters):
 # plt.show()
 
 # Create a PdfPages object to save the plots
-with PdfPages('SpectralAllData.pdf') as pdf:
+# with PdfPages('SpectralAllData.pdf') as pdf:
     # for i, (metric, score_list) in enumerate(scores.items()):
     #     fig, ax = plt.subplots()
     #     ax.plot(clusters, score_list, marker='o', linestyle='-')
@@ -115,11 +118,11 @@ with PdfPages('SpectralAllData.pdf') as pdf:
     #     plt.close(fig)  # Close the figure to free memory
 
     # Save the scatter plot with cluster centers
-    fig, ax = plt.subplots(figsize=(10, 8))
-    ax.scatter(X_pca[:, 0], X_pca[:, 1], c=y_pred, cmap='viridis', marker='o', edgecolor='k')
-    ax.set_title(f'Spectral Clustering', size = 24)
-    ax.set_xlabel('Principal Component 1', size = 20)
-    ax.set_ylabel('Principal Component 2', size = 20)
-    pdf.savefig(fig)  # Save the scatter plot into the pdf
-    plt.close(fig)  # Close the figure to free memory
+    # fig, ax = plt.subplots(figsize=(10, 8))
+    # ax.scatter(X_pca[:, 0], X_pca[:, 1], c=y_pred, cmap='viridis', marker='o', edgecolor='k')
+    # ax.set_title(f'Spectral Clustering', size = 24)
+    # ax.set_xlabel('Principal Component 1', size = 20)
+    # ax.set_ylabel('Principal Component 2', size = 20)
+    # pdf.savefig(fig)  # Save the scatter plot into the pdf
+    # plt.close(fig)  # Close the figure to free memory
 

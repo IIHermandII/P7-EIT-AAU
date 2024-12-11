@@ -38,10 +38,11 @@ def GetNewestDataFileNamer(x):
     dirDates = sorted(dirDates,key=lambda l:l[1],reverse=True) # Take oldest data first i belive 
     return(workDir + "\\" + dirDates[0][1])
 
-labeledData = pd.read_csv(GetNewestDataFileNamer('unlabeled'))
+labeledData = pd.read_csv(GetNewestDataFileNamer('labeled'))
 
 labels = labeledData.iloc[:, 1]
 dataLabeled = labeledData.iloc[:,2:]
+
 
 
 # Scale the data to have 0 mean and variance 1 - recommended step by sklearn
@@ -97,6 +98,9 @@ for idx, n_clusters in enumerate(clusters):
 
     end_time = time.time()
     print(f'Time taken for {n_clusters} clusters: {end_time - start_time:.2f} seconds')
+
+    print(f'Adjusted Rand Index for {n_clusters} clusters: {ari_score}')
+    print(f'Normalized Mutual Information Score for {n_clusters} clusters: {nmi_score}')
 
 # Plot each metric score in a subplot
 # for i, (metric, score_list) in enumerate(scores.items()):
