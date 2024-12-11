@@ -10,6 +10,7 @@ We successfully implemented a solution for this problem. The project is designed
 
 ### Running the Code
 
+Not all files comes in the repo so you need to run the code to see it all :D
 To run the project, make sure to update the `main.py` file with the correct path to the "Data" folder, and then run the `main.py` script. Ensure that all dependencies are installed (e.g., via `pip`). The project is designed to run with Python 3.
 
 ### LabelClipsToCSV.py
