@@ -2,23 +2,23 @@ import os
 import numpy as np
 import re
 import pandas as pd
-
+from termcolor import colored
 import matplotlib.pyplot as plt
-from mpl_toolkits import mplot3d
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
+import sys
 
-def GetNewestDataFileName():
-    #Check for env variable - error if not present
-    envP7RootDir = os.getenv("P7RootDir")
-    if envP7RootDir is None:
-        print("---> If you are working in vscode\n---> you need to restart the aplication\n---> After you have made a env\n---> for vscode to see it!!")
-        print("---> You need to make a env called 'P7RootDir' containing the path to P7 root dir")
-        raise ValueError('Environment variable not found (!env)')
-    
-    #Enter CSV directory
-    workDir = envP7RootDir + "\\Data\\CSV files"
+def OprationExplanation():
+    print("\n\n\n-------------- CSV data Visuallized --------------")
+    print("This file expects the following to work:")
+    print("1.\tenv ( Environment variables / System variables):")
+    print("\tP7RootDir : C:\\path\\to\\P7  i.g C:\\Users\\emill\\OneDrive - Aalborg Universitet\\P7 ")
+    print("2.\tAll files at: P7\\Data\\Label clips. to have same structure")
+    print("\t<name>-<number>-...-<number>.wav")
+
+def GetNewestDataFileName(RootDir):
+    workDir = RootDir + "\\CSV files"
     
     #Find all dates from the files
     dirDates = []
@@ -48,6 +48,7 @@ def plotData2D(dataFile):
     pca = PCA(n_components=2).fit(data_S)
     lda = LDA(n_components=2).fit(data_S,labels)
 
+    print("2-Dimentions:")
     print("PCA explained var: ",sum(pca.explained_variance_ratio_))
     print("LDA explained var: ",sum(lda.explained_variance_ratio_))
 
@@ -120,6 +121,7 @@ def plotData3D(dataFile):
     pca = PCA(n_components=3).fit(data_S)
     lda = LDA(n_components=3).fit(data_S,labels)
 
+    print("3-Dimentions:")
     print("PCA explained var: ",sum(pca.explained_variance_ratio_))
     print("LDA explained var: ",sum(lda.explained_variance_ratio_))
 
@@ -188,6 +190,7 @@ def screePlot(dataFile):
     variancePC = []
     for i in range(len(varEx)):
         variancePC.append(round(varEx[:i].sum(),3))
+    print("Variance of Principal Components [1..n]")
     print(variancePC)
 
     plt.figure()
@@ -280,22 +283,25 @@ def Nicoletta(file):
     print("PCA Variance " , sum(pca.explained_variance_ratio_))
 
 def main():
-   envP7RootDir = os.getenv("P7RootDir")
-   #Use this variable to select between our (handlabelled) and total (self labelled) datasets
-   #Do this at your own risk...
-   TotalDataFileName = envP7RootDir + "\\Data\\Total datasets\\Total data file (LR).csv"
-
-   #NewestDataFileName = GetNewestDataFileName() 
-   NewestDataFileName = "Datasets\\OurData.csv"
-   print(NewestDataFileName)
-#    plotData2D(NewestDataFileName)
-#    plotData3D(NewestDataFileName)
-   PredictedDataFileName = "C:\\Users\\emill\OneDrive - Aalborg Universitet\\P7\\Data\\CSV files self\\2.csv"
-   plotData3D(PredictedDataFileName)
-   #Nicoletta("Datasets\\Old student training_final.csv")
-   #biplot(NewestDataFileName) #
-   screePlot(NewestDataFileName)
-   plt.show()
+    envP7RootDir = os.getenv("P7RootDir")
+    #Use this variable to select between our (handlabelled) and total (self labelled) datasets
+    #Do this at your own risk...
+    #TotalDataFileName = envP7RootDir + "\\Data\\Total datasets\\Total data file (LR).csv"
+    RootDir = sys.argv[1]
+    print("EL argument:", sys.argv[1])
+    NewestDataFileName = GetNewestDataFileName(RootDir) 
+    # NewestDataFileName = "Datasets\\OurData.csv"
+    print(NewestDataFileName)
+    plotData2D(NewestDataFileName)
+    plotData3D(NewestDataFileName)
+    # PredictedDataFileName = "C:\\Users\\emill\OneDrive - Aalborg Universitet\\P7\\Data\\CSV files self\\2.csv"
+    # plotData3D(PredictedDataFileName)
+    # Nicoletta("Datasets\\Old student training_final.csv")
+    biplot(NewestDataFileName) #
+    screePlot(NewestDataFileName)
+    print(colored("Remember do close plots befor this process will continiue...", 'red', attrs=['bold']))
+    plt.show()
+    print(colored("continiueing now", 'green', attrs=['bold']))
 
 if __name__ == "__main__":
     main()

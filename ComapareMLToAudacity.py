@@ -8,6 +8,8 @@ import numpy as np
 import seaborn as sns
 from tqdm import tqdm
 import soundfile as sf
+import sys
+from termcolor import colored
 
 LstBI = []
 LstBO = []
@@ -185,9 +187,10 @@ def GetFileInformation(PedictData, TestData):
                     TimeArrayM.append(DC[i][1]-DC[i][0])
         
         if index == 1:
-            strInfo = "Prediction data"
+            strInfo = "System prediction"
         else:
-            strInfo = "Test Data"
+            strInfo = "System we have labeled"
+        print(colored(strInfo, 'green', attrs=['bold']))
         ResultPresentation(strInfo,TimeArrayBI,TimeArrayBO,TimeArrayV,TimeArrayCT,TimeArrayM,ChechSum)
 
     for i in range(len(TestData)):
@@ -217,7 +220,7 @@ def GetFileInformation(PedictData, TestData):
                 # print(4)
                 #                       StartTime,      EndTime,        PedictDataName,     TestDataName
                 GetFileInFormationMath(TestData[i][0],TestData[i][1],PedictData[j][2],TestData[i][2])
-
+    print(colored("Prediction macth with our labeling", 'green', attrs=['bold']))
     ResultPresentation("correct Time",CorrectTimeArrayBI,CorrectTimeArrayBO,CorrectTimeArrayV,CorrectTimeArrayCT,CorrectTimeArrayM,"1")
     print("Check Sum: ", sum(CorrectCheckSum))
     summ = 0
@@ -225,12 +228,12 @@ def GetFileInformation(PedictData, TestData):
         # print((i[0][0]))
         summ += i[0][0]
     print(summ)
-    print("BI : ", f"{sum(CorrectTimeArrayBI)/sum(TimeArrayBI):.2f}", "%\tBO : ", f"{sum(CorrectTimeArrayBO)/sum(TimeArrayBO):.2f}", "%\tV : ", f"{sum(CorrectTimeArrayV)/sum(TimeArrayV):.2f}", "%\tCT : ", f"{sum(CorrectTimeArrayCT)/sum(TimeArrayCT):.2f}", "%\t M : ", f"{sum(CorrectTimeArrayM)/sum(TimeArrayM):.2f}","%")
-
+    print("BI : ", f"{sum(CorrectTimeArrayBI)/sum(TimeArrayBI)*100:.2f}", "%\tBO : ", f"{sum(CorrectTimeArrayBO)/sum(TimeArrayBO)*100:.2f}", "%\tV : ", f"{sum(CorrectTimeArrayV)/sum(TimeArrayV)*100:.2f}", "%\tCT : ", f"{sum(CorrectTimeArrayCT)/sum(TimeArrayCT)*100:.2f}", "%\t M : ", f"{sum(CorrectTimeArrayM)/sum(TimeArrayM)*100:.2f}","%")
   
 def main():
-    PathToPredectetData = "Outputs\\Predictions_2_Smart(SVM).txt"
-    PathToTestData = "Outputs\\TestLabels 2.txt"
+    RootDir = sys.argv[1]
+    PathToPredectetData = RootDir + "\\Outputs\\Predictions_2_Smart(SVM).txt"
+    PathToTestData = RootDir + "\\SoundFile\\LablingWeHaveDone.txt"
     PedictData = loadDataToList(PathToPredectetData)
     TestData = loadDataToList(PathToTestData)
     GetFileInformation(PedictData, TestData)    

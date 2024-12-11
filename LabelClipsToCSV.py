@@ -7,6 +7,7 @@ import datetime
 import scipy.stats
 from tqdm import trange
 import warnings
+import sys
 
 def OprationExplanation():
     print("\n\n\n-------------- Labelled data to CSV file --------------")
@@ -16,13 +17,8 @@ def OprationExplanation():
     print("2.\tAll files at: P7\\Data\\Label clips. to have same structure")
     print("\t<name>-<number>-...-<number>.wav")
 
-def GetDataFiles():
-    envP7RootDir = os.getenv("P7RootDir")
-    if envP7RootDir is None:
-        print("---> If you are working in vscode\n---> you need to restart the aplication\n---> After you have made a env\n---> for vscode to see it!!")
-        print("---> You need to make a env called 'P7RootDir' containing the path to P7 root dir")
-        raise ValueError('Environment variable not found (!env)')
-    workDir = envP7RootDir + "\\Data\\Label clips 500Hz"
+def GetDataFiles(RootDir):
+    workDir = RootDir + "\\\Label clips"
     DataList = []
     ListOfLabels = []
 
@@ -34,7 +30,7 @@ def GetDataFiles():
             DataList.append([FilePath,LastDir,regExExpression[0]])
             if regExExpression[0] not in ListOfLabels:
                 ListOfLabels.append(regExExpression[0])
-    return DataList, envP7RootDir
+    return DataList
 
 def FeatureExtraction(WovFile):
     y, sr = librosa.load(WovFile, sr=None) # sr=none preserve native sampling rate
@@ -97,7 +93,7 @@ def FeatureExtraction(WovFile):
 
     return features
 
-def MakeCSV(DataList, envP7RootDir):
+def MakeCSV(DataList, RootDir):
     print("\n\n\nWORKING ON CSV THIS MAY TAKE A FEW ME-NUTS >:D ...")
     all_features = []
     for i in trange(len(DataList)):
@@ -114,7 +110,7 @@ def MakeCSV(DataList, envP7RootDir):
     column_order = ['Filename', 'Label'] + [f'LPC{i + 2}' for i in range(5)] +  [f'MFCC{i + 1}' for i in range(13)] + \
                 ['MFCC_Var', 'Spectral_Contrast_Mean', 'Spectral_Contrast_Var', 'SFM', 'Spectral_Spread', 'Spectral_Skewness', 'Spectral_Centroid', 'Chroma_Mean', 'Chroma_Var', 'ZCR', 'STE', 'RMS']
     features_df = features_df[column_order]
-    workDir = envP7RootDir + "\\Data\\CSV files"
+    workDir = RootDir + "\\CSV files"
     currentTime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     CSVFileName = workDir + '\\' +currentTime+'_audio_features_with_labels.csv'
     features_df.to_csv(CSVFileName, index=False)
@@ -124,10 +120,12 @@ def MakeCSV(DataList, envP7RootDir):
     print('CSV saved under the name: ' + currentTime + '_audio_features_with_labels.csv' )
 
 def main():
+    RootDir = sys.argv[1]
+    print("EL argument:", sys.argv[1])
     warnings.filterwarnings("ignore")
     OprationExplanation()
-    DataList, envP7RootDir = GetDataFiles()
-    MakeCSV(DataList, envP7RootDir)
+    DataList = GetDataFiles(RootDir)
+    MakeCSV(DataList, RootDir)
 
 if __name__ == "__main__":
     main()

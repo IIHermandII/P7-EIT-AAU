@@ -1,114 +1,69 @@
-# Branch : JU_work_02
+# P7-EIT-AAU Diver Voice Recognition
+by: Emil Leth Høimark, Jens-Ulrik Ladekjær-Mikkelsen, Casper Nørrergaard Bak, Steffen Damm, Marcus Mogensen, Magnus Høgh.
+### Overview of the Project
 
-### Classify audio.py
-This script uses a trained model by the pipeline.py script to classify an audio file.
-The script also allows for modifications to the audio depending on class.
-The current script attenuates 'BI', 'BO' and 'M' by 12dB.
-The scipt can also output the clasified segments in the original data format
-and can also output the predections in a predictions.txt file.
-The script output the processed audio
+This project was completed during the 7th semester (the first semester of the Master's program) for Electronic Engineers at Aalborg University (AAU), Denmark. The theme of the project was Machine Learning (ML), and we selected the following task:
 
-**Dependensis** 
-- envP7RootDir (environment variable - root directory of OneDrive)
-- Libraries: Os, Librosa, Pandas, TQDM, Numpy, Scipy, Joblib, Sourndfile, Warnings
+At Nordsøen, a large indoor aquarium, divers communicate underwater during feeding sessions. While fish are being fed, the divers explain things to the audience through a microphone seen through a glass window. However, the sound of breathing, other equipment noises, and pressurized air often interfere with the diver's speech. The task was to label the sounds and differentiate between actual speech and background noise.
 
-### CSVDataVisualizer.py
-The script uses PCA and LDA to plot the data in 2D.
-The scipt is also used to find potential misclassifications in the data (manual),
-and locate them in the data file.
-The script also creates a screeplot hinting at the required dimension of the data.
+We successfully implemented a solution for this problem. The project is designed to be plug-and-play, easy to follow, and simple to understand. *In case you have any feedback or criticism regarding the code, we kindly refer you to the university they should have taught us better—though we are perfect in every way! (just a joke!)*
 
-**Dependensis** 
-- envP7RootDir (environment variable - root directory of OneDrive) 
-- Libraries: Os, Numpy, Re, Pandas, Scikit-learn, Matplotlib
+### Running the Code
 
-### FeatureSelection.py
-This script experiments with different feature selection schemes:
-RFE(CV), Kbest, Variance thresholding and PCA analysis.
-
-**Dependensis** 
-- envP7RootDir (environment variable - root directory of OneDrive)
-- Libraries: Os, Numpy, Re, Pandas, Scikit-learn, Matplotlib
+To run the project, make sure to update the `main.py` file with the correct path to the "Data" folder, and then run the `main.py` script. Ensure that all dependencies are installed (e.g., via `pip`). The project is designed to run with Python 3.
 
 ### LabelClipsToCSV.py
-This script converts the many handlabelled clips from exported from Audacity to a CSV data file.
-The script uses Pandas dataframes to achive this.
 
-**Dependensis** 
-- envP7RootDir (environment variable - root directory of OneDrive) 
-- Libraries: Os, Numpy, Re, Librosa, Pandas, Matplotlib, Datetime, Scipy, TQDM
+This script converts the manually labeled clips from Audacity into a CSV data file using Pandas dataframes. The output is saved as a CSV file for further analysis.
 
-### MergeCSV.py
-This script merges the handlablled data set with a model labelled dataset (self label).
+**Dependencies**  
+- Libraries: os, re, librosa, numpy, pandas, datetime, scipy.stats, tqdm, warnings, sys
 
-**Dependensis** 
-- envP7RootDir (environment variable - root directory of OneDrive) 
-- Libraries: Os, Re, Pandas
+### CSVDataVisualizer.py
+
+This script uses PCA (Principal Component Analysis) and LDA (Linear Discriminant Analysis) to visualize the data in 2D or 3D. It also helps to identify potential misclassifications in the data (manual inspection) and locate them within the data file. The script generates a scree plot to hint at the optimal data dimensions.
+
+**Dependencies**  
+- Libraries: os, numpy, re, pandas, matplotlib.pyplot, sklearn.preprocessing, sklearn, sys
 
 ### Pipeline.py
-This script excutes a Scikit-learn pipeline. The pipeline consists of:
-StandardScalar->RFECV->Model
-The result is a model trained on the best performing feature set (accuracy - cross validation).
-The model is exported using joblib for use in Classify audio script to avoid training the model several times.
 
-**Dependensis** 
-- envP7RootDir (environment variable - root directory of OneDrive) 
-- Libraries: Os, Numpy, Re, Librosa, Pandas, Matplotlib, Scikit-learn, Time, Warnings, Joblib
+This script executes a Scikit-learn pipeline that builds, trains, evaluates, and exports a binary file for the machine learning model. 
 
-### File structure
-We have the following file structure to allow the code to execute (Windows tree command):
-Root: ⟵ envP7RootDir points here
-+---Courses
-¦   +---PAD
-¦   +---Performance and Reliability Analyses of Communication Networks
-¦   +---Signal processering
-+---Data
-¦   +---Behandlet data af Nicoleta
-¦   +---CSV files
-¦   +---CSV files self
-¦   +---Label clips
-¦   ¦   +---10
-¦   ¦   +---11
-¦   ¦   +---12
-¦   ¦   +---13
-¦   ¦   +---14
-¦   ¦   +---15
-¦   ¦   +---16
-¦   ¦   +---17
-¦   ¦   +---18
-¦   ¦   +---19
-¦   ¦   +---2
-¦   ¦   +---20
-¦   ¦   +---21
-¦   ¦   +---22
-¦   ¦   +---23
-¦   ¦   +---3
-¦   ¦   +---4
-¦   ¦   +---5
-¦   ¦   +---6
-¦   ¦   +---7
-¦   ¦   +---8
-¦   ¦   +---9
-¦   +---Original
-¦   ¦   +---Audio and Video Files
-¦   ¦   +---Video
-¦   +---Processed audio
-¦   +---Refined data
-¦   ¦   +---Unlabeled data
-¦   ¦       +---16
-¦   ¦       +---17
-¦   ¦       +---2
-¦   ¦       +---3
-¦   ¦       +---6
-¦   ¦       +---7
-¦   ¦       +---PROCESSED DATA
-¦   ¦       +---Unlabeled test data
-¦   +---Total datasets
-+---Illustrations
-+---Matlab
-+---Sources
-    +---Behandlet data af Nicoleta
-    ¦   +---Data
-    +---Books
+**Dependencies**  
+- Libraries: os, re, pandas, numpy, matplotlib.pyplot, matplotlib.lines, joblib, warnings, time, sklearn, sys
 
-Inside the label clips folders are all the clips exported from audacity files located in Refined audio.
+### SmartLabelAudio.py
+
+This script uses the newly created binary model to label a sound file and save the labels to a file.
+
+**Dependencies**  
+- Libraries: os, numpy, librosa, soundfile, scipy, joblib, pandas, tqdm, warnings, termcolor, sys
+
+### CompareMLToAudacity.py
+
+This script compares the ML-labeled file to the manually labeled file from Audacity and evaluates the accuracy in percentage.
+
+**Dependencies**  
+- Libraries: os, sklearn, matplotlib, numpy, tqdm, seaborn, soundfile, sys, termcolor
+
+### File Structure
+
+The project follows this directory structure to ensure the code runs smoothly:
+
+
+
++---P7-EIT-AAU<br />
+¦&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+---main.py (main file calling they other files)<br />
+¦&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+---ComapareMLToAudacity.py<br />
+¦&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+---LabelClipsToCSV.py<br />
+¦&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+---Pipeline.py<br />
+¦&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+---SmartLableAudio.py<br />
+¦&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+---Data<br />
+¦&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;¦&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+---CSV files<br />
+¦&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;¦&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+---Figures<br />
+¦&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;¦&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+---Label clips<br />
+¦&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;¦&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+---Models<br />
+¦&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;¦&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+---Outputs<br />
+¦&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;¦&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;¦&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+---(RESULTS)<br />
+¦&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;¦&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+---Soundfile<br />
