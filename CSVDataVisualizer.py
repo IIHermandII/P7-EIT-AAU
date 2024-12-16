@@ -33,7 +33,7 @@ def GetNewestDataFileName(RootDir):
     dirDates = sorted(dirDates,key=lambda l:l[1],reverse=True) # Take oldest data first i belive 
     return(workDir + "\\" + dirDates[0][1])
 
-def plotData2D(dataFile):
+def plotData2D(RootDir, dataFile):
     #Read CSV file
     df = pd.read_csv(dataFile)
 
@@ -68,7 +68,7 @@ def plotData2D(dataFile):
     plt.ylabel("$PC_2$")
     plt.legend(list)
     plt.title("PCA dimensionality reduction")
-    plt.savefig('Figures\\PCA data (2D).pdf',bbox_inches="tight")
+    plt.savefig(RootDir + '\\Figures\\PCA data (2D).pdf',bbox_inches="tight")
 
     plt.figure()
     #plt.subplot(1,2,2)
@@ -80,7 +80,7 @@ def plotData2D(dataFile):
     plt.ylabel("$LDA_2$")
     plt.legend(list)
     plt.title("LDA dimensionality reduction")
-    plt.savefig('Figures\\LDA data (2D).pdf',bbox_inches="tight")
+    plt.savefig(RootDir + '\\Figures\\LDA data (2D).pdf',bbox_inches="tight")
 
     plt.figure()
     #plt.subplot(1,2,2)
@@ -107,7 +107,7 @@ def plotData2D(dataFile):
     #         errors.append(lineCSV[i]+2)#Correct for removal of header line and start at 0 in code
     # print("Potential misclassification (CSV line): ",errors)
 
-def plotData3D(dataFile):
+def plotData3D(RootDir, dataFile):
     #Read CSV file
     df = pd.read_csv(dataFile)
 
@@ -139,7 +139,7 @@ def plotData3D(dataFile):
         ax.scatter3D(dataPCA[index,0], dataPCA[index,1], dataPCA[index,2], s=6)
     plt.legend(list)
     plt.title("PCA dimensionality reduction")
-    plt.savefig('Figures\\PCA data (3D).pdf',bbox_inches="tight")
+    plt.savefig(RootDir + '\\Figures\\PCA data (3D).pdf',bbox_inches="tight")
 
     plt.figure()
     #plt.subplot(1,2,2)
@@ -151,7 +151,7 @@ def plotData3D(dataFile):
         ax.scatter3D(dataLDA[index,0], dataLDA[index,1], dataLDA[index,2], s=6)
     plt.legend(list)
     plt.title("LDA dimensionality reduction")
-    plt.savefig('Figures\\LDA data (3D).pdf',bbox_inches="tight")
+    plt.savefig(RootDir + '\\Figures\\LDA data (3D).pdf',bbox_inches="tight")
 
     plt.figure()
     #plt.subplot(1,2,2)
@@ -164,7 +164,7 @@ def plotData3D(dataFile):
     plt.legend(list)
     plt.title("Selected features")
 
-def screePlot(dataFile):
+def screePlot(RootDir, dataFile):
     #Read CSV file
     df = pd.read_csv(dataFile)
 
@@ -183,7 +183,7 @@ def screePlot(dataFile):
     plt.title('Scree plot')
     plt.xlabel('Principal component')
     plt.ylabel('Variance explained')
-    plt.savefig('Figures\\Scree plot.pdf',bbox_inches="tight")
+    plt.savefig(RootDir + '\\Figures\\Scree plot.pdf',bbox_inches="tight")
 
     varEx = pca.explained_variance_ratio_
 
@@ -198,9 +198,9 @@ def screePlot(dataFile):
     plt.title('Cumulative "Scree plot"')
     plt.xlabel('Principal component')
     plt.ylabel('Variance explained ratio')
-    plt.savefig('Figures\\Scree plot Inv.pdf',bbox_inches="tight")
+    plt.savefig(RootDir + '\\Figures\\Scree plot Inv.pdf',bbox_inches="tight")
 
-def biplot(dataFile):
+def biplot(RootDir, dataFile):
     #Read CSV file
     df = pd.read_csv(dataFile)
 
@@ -241,7 +241,7 @@ def biplot(dataFile):
     plt.ylabel("$PC_2$")
     plt.grid()
     plt.title('Biplot of first two principal components')
-    plt.savefig('Figures\\Biplot.pdf',bbox_inches="tight")
+    plt.savefig(RootDir + '\\Figures\\Biplot.pdf',bbox_inches="tight")
     #plt.show()
 
 def Nicoletta(file):
@@ -292,13 +292,13 @@ def main():
     NewestDataFileName = GetNewestDataFileName(RootDir) 
     # NewestDataFileName = "Datasets\\OurData.csv"
     print(NewestDataFileName)
-    plotData2D(NewestDataFileName)
-    plotData3D(NewestDataFileName)
+    plotData2D(RootDir, NewestDataFileName)
+    plotData3D(RootDir, NewestDataFileName)
     # PredictedDataFileName = "C:\\Users\\emill\OneDrive - Aalborg Universitet\\P7\\Data\\CSV files self\\2.csv"
     # plotData3D(PredictedDataFileName)
     # Nicoletta("Datasets\\Old student training_final.csv")
-    biplot(NewestDataFileName) #
-    screePlot(NewestDataFileName)
+    biplot(RootDir, NewestDataFileName) 
+    screePlot(RootDir, NewestDataFileName)
     print(colored("Remember do close plots befor this process will continiue...", 'red', attrs=['bold']))
     plt.show()
     print(colored("continiueing now", 'green', attrs=['bold']))
